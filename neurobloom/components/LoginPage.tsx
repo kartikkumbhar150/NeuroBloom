@@ -1,18 +1,48 @@
+"use client";
+
+import { useRouter } from "next/navigation";
+
 import { Brain, Lock, Mail, ArrowLeft } from 'lucide-react';
 import { useState } from 'react';
 
-interface LoginPageProps {
-  onNavigate: (page: 'landing' | 'login' | 'signup') => void;
-}
 
-export function LoginPage({ onNavigate }: LoginPageProps) {
+
+export function LoginPage() {
+  const router = useRouter();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [loading, setLoading] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async(e: React.FormEvent) => {
     e.preventDefault();
-    // Handle login logic here
-    console.log('Login attempt:', { email, password });
+    setLoading(true);
+    try{
+      const res = await fetch("/api/auth/login", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        email,
+        password,
+      }),
+    });
+
+    const data = await res.json();
+
+    if (!res.ok) {
+      alert(data.error || "Login failed");
+      return;
+    }
+
+    //  Signup success
+    alert("Login successfully!");
+
+  } catch (error) {
+    console.error("Login error:", error);
+    alert("Something went wrong. Please try again.");
+  }
+    
   };
 
   return (
@@ -28,7 +58,7 @@ export function LoginPage({ onNavigate }: LoginPageProps) {
 
       {/* Back to home button */}
       <button
-        onClick={() => onNavigate('landing')}
+        onClick={() => router.push("/")}
         className="absolute top-6 left-6 flex items-center gap-2 text-indigo-600 hover:text-indigo-700 transition-colors"
       >
         <ArrowLeft className="w-5 h-5" />
@@ -117,7 +147,7 @@ export function LoginPage({ onNavigate }: LoginPageProps) {
             <p className="text-gray-600">
               Don't have an account?{' '}
               <button
-                onClick={() => onNavigate('signup')}
+                onClick={() => router.push("/signup")}
                 className="text-indigo-600 hover:text-indigo-700 font-medium transition-colors"
               >
                 Sign up

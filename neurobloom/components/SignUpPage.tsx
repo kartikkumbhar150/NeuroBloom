@@ -1,11 +1,13 @@
+"use client";
+import { useRouter } from "next/navigation";
+
 import { Brain, Mail, Lock, User, ArrowLeft, Shield, CheckCircle } from 'lucide-react';
 import { useState } from 'react';
 
-interface SignUpPageProps {
-  onNavigate: (page: 'landing' | 'login' | 'signup') => void;
-}
 
-export function SignUpPage({ onNavigate }: SignUpPageProps) {
+
+export function SignUpPage() {
+  const router = useRouter();
   const [formData, setFormData] = useState({
     fullName: '',
     email: '',
@@ -14,11 +16,40 @@ export function SignUpPage({ onNavigate }: SignUpPageProps) {
     agreement: false,
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    // Handle sign up logic here
-    console.log('Sign up attempt:', formData);
-  };
+  const handleSubmit = async (e: React.FormEvent) => {
+  e.preventDefault();
+
+  try {
+    const res = await fetch("/api/auth/signup", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        name: formData.fullName,
+        email: formData.email,
+        password: formData.password,
+        role: formData.role,
+      }),
+    });
+
+    const data = await res.json();
+
+    if (!res.ok) {
+      alert(data.error || "Signup failed");
+      return;
+    }
+
+    //  Signup success
+    alert("Account created successfully!");
+    router.push("/login");
+
+  } catch (error) {
+    console.error("Signup error:", error);
+    alert("Something went wrong. Please try again.");
+  }
+};
+
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-teal-50 flex items-center justify-center px-6 py-12 relative overflow-hidden">
@@ -33,7 +64,7 @@ export function SignUpPage({ onNavigate }: SignUpPageProps) {
 
       {/* Back to home button */}
       <button
-        onClick={() => onNavigate('landing')}
+        onClick={() => router.push("/landing")}
         className="absolute top-6 left-6 flex items-center gap-2 text-indigo-600 hover:text-indigo-700 transition-colors"
       >
         <ArrowLeft className="w-5 h-5" />
@@ -200,7 +231,7 @@ export function SignUpPage({ onNavigate }: SignUpPageProps) {
               <p className="text-gray-600">
                 Already have an account?{' '}
                 <button
-                  onClick={() => onNavigate('login')}
+                  onClick={() => router.push("/login")}
                   className="text-indigo-600 hover:text-indigo-700 font-medium transition-colors"
                 >
                   Log in
