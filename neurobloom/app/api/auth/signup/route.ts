@@ -17,7 +17,7 @@ export async function POST(req: Request) {
     [email]
   )
 
-  if (existing.rowCount > 0) {
+  if ((existing.rowCount ?? 0) > 0) {
     return NextResponse.json({ error: "User already exists" }, { status: 409 })
   }
 
