@@ -37,6 +37,7 @@ export function LoginPage() {
 
     //  Signup success
     alert("Login successfully!");
+    router.push("/dashboard");
 
   } catch (error) {
     console.error("Login error:", error);
