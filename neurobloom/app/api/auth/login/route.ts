@@ -3,12 +3,12 @@ export const runtime = "nodejs";
 import { NextResponse } from "next/server"
 import bcrypt from "bcrypt"
 import jwt from "jsonwebtoken"
-import { db } from "@/lib/db"
+import { pool } from "@/lib/db"
 
 export async function POST(req: Request) {
   const { email, password } = await req.json()
 
-  const result = await db.query(
+  const result = await pool.query(
     "SELECT id, password_hash FROM users WHERE email = $1",
     [email]
   )
