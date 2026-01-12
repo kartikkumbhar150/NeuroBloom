@@ -7,9 +7,10 @@ import { Check, X, Star, Coins } from 'lucide-react';
 
 interface Level1Props {
   onComplete: () => void;
+  onProgress: (gameIndex: number) => void;
 }
 
-export function Level1MathAdventure({ onComplete}: Level1Props) {
+export function Level1MathAdventure({ onComplete, onProgress }: Level1Props) {
   const [currentGame, setCurrentGame] = useState(0);
   const [score, setScore] = useState(0);
   const [feedback, setFeedback] = useState<'correct' | 'incorrect' | null>(null);
@@ -49,6 +50,7 @@ export function Level1MathAdventure({ onComplete}: Level1Props) {
 
   if (currentGame < 5) {
     setCurrentGame(currentGame + 1);
+    onProgress(currentGame + 1);
   } else {
     onComplete();
   }

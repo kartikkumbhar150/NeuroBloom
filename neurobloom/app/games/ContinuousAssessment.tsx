@@ -192,6 +192,7 @@ export function ContinuousAssessment({ studentData, onComplete }: ContinuousAsse
         return (
           <Level1MathAdventure
             onComplete={handleLevelComplete}
+            onProgress={(gameIndex) => setCurrentGame(gameIndex)}
           />
         );
       case 2:
@@ -235,18 +236,93 @@ export function ContinuousAssessment({ studentData, onComplete }: ContinuousAsse
   return (
     <div className={`min-h-screen bg-gradient-to-br ${selectedLevel.color} p-8`}>
       <div className="max-w-5xl mx-auto">
-        
+        {/* Top Header with Student Info and Progress */}
+        <div className="bg-white/95 backdrop-blur-sm rounded-3xl shadow-lg p-6 mb-6">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-4">
+              <div className="bg-gradient-to-br from-purple-500 to-pink-500 text-white w-14 h-14 rounded-2xl flex items-center justify-center text-2xl font-black">
+                {studentData.name.charAt(0).toUpperCase()}
+              </div>
+              <div>
+                <h3 className="text-xl font-bold text-gray-800">{studentData.name}</h3>
+                <p className="text-sm text-gray-600">Age {studentData.age} • Assessment in Progress</p>
+              </div>
+            </div>
+            <div className="text-right">
+              <p className="text-sm text-gray-600">Level {currentLevel} of 6</p>
+              <p className="text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-purple-600 to-pink-600">
+                {selectedLevel.name}
+              </p>
+            </div>
+          </div>
+
+          {/* Overall Progress Bar */}
+          <div>
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-sm font-semibold text-gray-600">Overall Progress</span>
+              <span className="text-sm font-bold text-purple-600">
+                {Math.round(overallProgress)}%
+              </span>
+            </div>
+            <div className="bg-gray-200 rounded-full h-4 overflow-hidden">
+              <motion.div
+                initial={{ width: 0 }}
+                animate={{ width: `${overallProgress}%` }}
+                transition={{ duration: 0.5 }}
+                className="bg-gradient-to-r from-purple-500 via-pink-500 to-orange-500 h-full rounded-full"
+              />
+            </div>
+          </div>
         </div>
 
-  
+        {/* Current Level Progress */}
+        <div className="bg-white rounded-3xl p-4 shadow-lg mb-6">
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-3">
+              <div className="text-4xl">{selectedLevel.icon}</div>
+              <span className="text-lg font-bold text-gray-700">
+                Game {currentGame + 1}/{selectedLevel.totalGames}
+              </span>
+            </div>
+            <div className="flex-1 bg-gray-200 rounded-full h-3 overflow-hidden">
+              <motion.div
+                initial={{ width: 0 }}
+                animate={{ width: `${((currentGame) / selectedLevel.totalGames) * 100}%` }}
+                className="bg-gradient-to-r from-yellow-400 to-orange-500 h-full rounded-full"
+              />
+            </div>
+          </div>
+        </div>
 
         {/* Game Content */}
         <div className="bg-white rounded-3xl shadow-2xl p-12">
           {renderLevelContent()}
         </div>
 
-  
+        {/* Level indicators at bottom */}
+        <div className="mt-6 flex justify-center gap-3">
+          {levels.map((level) => (
+            <div
+              key={level.id}
+              className={`flex flex-col items-center gap-2 transition-all ${
+                level.id === currentLevel ? 'scale-110' : 'opacity-60'
+              }`}
+            >
+              <div
+                className={`w-12 h-12 rounded-xl flex items-center justify-center text-2xl ${
+                  completedLevels.includes(level.id)
+                    ? 'bg-green-500'
+                    : level.id === currentLevel
+                    ? `bg-gradient-to-br ${level.color}`
+                    : 'bg-white/50'
+                }`}
+              >
+                {completedLevels.includes(level.id) ? '✓' : level.icon}
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
-    
+    </div>
   );
 }
