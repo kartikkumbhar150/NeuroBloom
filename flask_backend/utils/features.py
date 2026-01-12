@@ -1,33 +1,34 @@
 import numpy as np
 
-def extract_features(q, t):
-    q = np.array(q)
-    t = np.array(t)
+def extract_features(row):
+    q = np.array(row[:6], dtype=float)
+    t = np.array(row[6:], dtype=float)
 
-    accuracy = q.mean()
-    early = q[:3].mean()
-    late = q[3:].mean()
+    accuracy = np.mean(q)
+    mean_time = np.mean(t)
+    std_time = np.std(t)
+    fatigue = t[5] - t[0]
+    switch_cost = np.mean(t[3:]) - np.mean(t[:3])
+    efficiency = accuracy / max(mean_time, 0.1)
 
-    fatigue = t[-1] - t[0]
-    std = t.std()
-    mean = t.mean()
-
-    efficiency = q / np.clip(t, 0.1, None)
-
-    visual_error = (1-q[0] + 1-q[1]) / 2
-    planning_error = 1 - q[4]
-    sequence_error = 1 - q[5]
+    count_error = 1 - q[0]
+    compare_error = 1 - q[1]
+    add_error = 1 - q[3]
+    money_error = 1 - q[4]
+    subtract_error = 1 - q[5]
 
     return [
         accuracy,
-        early,
-        late,
-        late - early,
-        mean,
-        std,
+        mean_time,
+        std_time,
         fatigue,
-        efficiency.mean(),
-        visual_error,
-        planning_error,
-        sequence_error
+        switch_cost,
+        efficiency,
+        count_error,
+        compare_error,
+        add_error,
+        money_error,
+        subtract_error
     ]
+
+

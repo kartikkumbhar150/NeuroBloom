@@ -5,20 +5,19 @@ def fetch_session(session_id):
     cur = conn.cursor()
 
     cur.execute("""
-        SELECT 
-        test1_q1, test1_q1_time,
-        test1_q2, test1_q2_time,
-        test1_q3, test1_q3_time,
-        test1_q4, test1_q4_time,
-        test1_q5, test1_q5_time,
-        test1_q6, test1_q6_time
+        SELECT
+            test1_q1, test1_q2, test1_q3, test1_q4, test1_q5, test1_q6,
+            test1_q1_time, test1_q2_time, test1_q3_time,
+            test1_q4_time, test1_q5_time, test1_q6_time,
+            test2_audio1,
+            test2_audio2,
+            test4_q1, test4_q2, test4_q3, test4_q4,
+            test4_q1_time, test4_q2_time, test4_q3_time, test4_q4_time
         FROM child_assessment_features
-        WHERE id=%s
+        WHERE id = %s
     """, (session_id,))
 
     row = cur.fetchone()
+    conn.close()
 
-    q = [row[0], row[2], row[4], row[6], row[8], row[10]]
-    t = [row[1], row[3], row[5], row[7], row[9], row[11]]
-
-    return q, t
+    return row
