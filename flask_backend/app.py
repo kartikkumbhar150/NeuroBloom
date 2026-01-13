@@ -5,6 +5,10 @@ from utils.speech import transcribe
 from utils.features_test6 import extract_features as extract_test6_features
 from utils.test6_model import predict_test6
 import numpy as np
+from utils.handwriting import analyze_handwriting
+from utils.test5_model import predict_test5
+from utils.features_test5 import extract_features as extract_test5
+from utils.image import download_image
 
 
 # ================= MODELS =================
@@ -160,6 +164,82 @@ def test6():
         "strengths": strengths,
         "weaknesses": weaknesses
     })
+
+# ---------------- Handwriting Geometry ----------------
+from utils.image import download_image
+
+# ---------------- Handwriting Geometry ----------------
+@app.route("/predict/handwriting", methods=["POST"])
+def handwriting():
+    session_id = request.json.get("session_id")
+
+    row = fetch_session(session_id)
+    if not row:
+        return jsonify({"error": "Session not found"}), 404
+
+    image_url = row[14]   # test3_image from DB
+
+    if not image_url:
+        return jsonify({"error": "No handwriting image found"}), 400
+
+    try:
+        image_bytes = download_image(image_url)
+    except Exception as e:
+        return jsonify({"error": "Failed to download image"}), 500
+
+    score, diagnosis = analyze_handwriting(image_bytes)
+
+    return jsonify({
+        "session_id": session_id,
+        "diagnosis": diagnosis,
+        "risk_score": score
+    })
+
+
+@app.route("/predict/test5",methods=["POST"])
+def test5():
+    sid = request.json["session_id"]
+    row = fetch_session(sid)
+    feats = extract_test5(row)
+
+    pred = predict_test5(feats)
+
+    mean_rt, var, missed, impulsive, slow, q2t, q2s, q3t, q3s = feats
+
+    strengths=[]
+    weaknesses=[]
+
+    if missed > 2:
+        weaknesses.append("Poor sustained attention (missed beeps)")
+    if impulsive > 2:
+        weaknesses.append("High impulsivity (clicked before hearing sound)")
+    if slow > 2:
+        weaknesses.append("Very slow auditory responses (auditory processing weakness)")
+    if q3s == 0:
+        weaknesses.append("Poor phoneme discrimination (dyslexia marker)")
+    if q2s == 0:
+        weaknesses.append("Weak auditory word comprehension")
+
+    if mean_rt < 350:
+        strengths.append("Fast auditory reaction")
+    if q3s == 1:
+        strengths.append("Good sound discrimination")
+    if q2s == 1:
+        strengths.append("Good spoken word understanding")
+
+    return jsonify({
+        "prediction": pred,
+        "features": {
+            "mean_reaction_time": mean_rt,
+            "reaction_variability": var,
+            "missed_beeps": missed,
+            "impulsivity": impulsive,
+            "slow_responses": slow
+        },
+        "strengths": strengths,
+        "weaknesses": weaknesses
+    })
+
 
 
 if __name__ == "__main__":

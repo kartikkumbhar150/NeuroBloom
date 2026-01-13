@@ -18,3 +18,5 @@ faster-whisper
 tqdm
 soundfile
 matplotlib
+opencv-python
+
