@@ -9,6 +9,11 @@ from utils.handwriting import analyze_handwriting
 from utils.test5_model import predict_test5
 from utils.features_test5 import extract_features as extract_test5
 from utils.image import download_image
+import requests
+from utils.groq_api import send_to_groq
+from pdf_generator import create_pdf
+from cloudinary_uploader import upload_to_cloudinary
+from utils.report_db import save_report_url
 
 
 # ================= MODELS =================
@@ -32,17 +37,78 @@ app = Flask(__name__)
 @app.route("/predict/dyscalculia", methods=["POST"])
 def run_prediction():
     session_id = request.json.get("session_id")
-
     row = fetch_session(session_id)
+
     if not row:
         return jsonify({"error": "Session not found"}), 404
 
+    # Raw answers & times
+    q = [0 if x is None else float(x) for x in row[0:6]]
+    t = [0 if x is None else float(x) for x in row[6:12]]
+
+    # ML features + prediction
     features = extract_math_features(row)
     result = predict_math(features)
 
+    # ------------------------
+    # Question-wise Analysis
+    # ------------------------
+    questions = [
+        "Counting objects",
+        "Comparing quantities",
+        "Comparing numbers",
+        "Addition",
+        "Money calculation",
+        "Subtraction"
+    ]
+
+    strengths = []
+    weaknesses = []
+    detailed = []
+
+    for i in range(6):
+        status = "correct" if q[i] == 1 else "incorrect"
+        speed = "fast" if t[i] < np.mean(t) else "slow"
+
+        entry = {
+            "skill": questions[i],
+            "correct": bool(q[i]),
+            "time": t[i],
+            "performance": "good" if q[i] == 1 and speed == "fast" else
+                           "slow but correct" if q[i] == 1 else
+                           "struggled"
+        }
+
+        detailed.append(entry)
+
+        # Cognitive meaning
+        if q[i] == 1:
+            strengths.append(questions[i])
+        else:
+            weaknesses.append(questions[i])
+
+    # Cognitive style
+    if np.mean(t) > 6:
+        weaknesses.append("Slow mathematical processing")
+    if np.std(t) > 3:
+        weaknesses.append("Inconsistent attention during math")
+
     return jsonify({
         "session_id": session_id,
-        **result
+        "prediction": result["prediction"],
+        "confidence": result["confidence"],
+        "probabilities": result["probabilities"],
+
+        "math_profile": {
+            "accuracy": round(np.mean(q), 2),
+            "avg_time": round(np.mean(t), 2),
+            "consistency": round(np.std(t), 2)
+        },
+
+        "question_analysis": detailed,
+
+        "child_strengths": list(set(strengths)),
+        "child_struggles": list(set(weaknesses))
     })
 
 
@@ -50,29 +116,83 @@ def run_prediction():
 @app.route("/predict/reading_disability", methods=["POST"])
 def reading():
     session_id = request.json.get("session_id")
-
     row = fetch_session(session_id)
+
     if not row:
         return jsonify({"error": "Session not found"}), 404
 
+    # audio URLs
     audio1 = row[12]
     audio2 = row[13]
 
+    if not audio1 or not audio2:
+        return jsonify({"error": "Missing reading audio"}), 400
+
+    # Download & transcribe
     f1 = download_audio(audio1)
     f2 = download_audio(audio2)
 
     w1 = transcribe(f1)
     w2 = transcribe(f2)
 
-    words = w1 + w2
+    # Feature extraction per audio
+    ftrs1 = extract_reading_features(w1)
+    ftrs2 = extract_reading_features(w2)
 
-    features = extract_reading_features(words)
-    result = predict_reading(features)
+    # Combine for ML
+    combined = {
+        "avg_pause": (ftrs1["avg_pause"] + ftrs2["avg_pause"]) / 2,
+        "max_pause": max(ftrs1["max_pause"], ftrs2["max_pause"]),
+        "pause_count": ftrs1["pause_count"] + ftrs2["pause_count"],
+        "wpm": (ftrs1["wpm"] + ftrs2["wpm"]) / 2,
+        "total_words": ftrs1["total_words"] + ftrs2["total_words"]
+    }
 
+    # ML prediction
+    result = predict_reading(combined)
+
+    # ---------------- Interpretation ----------------
+    strengths = []
+    weaknesses = []
+
+    # Audio 1 (simple reading)
+    if ftrs1["wpm"] < 80:
+        weaknesses.append("Slow word decoding")
+    else:
+        strengths.append("Good basic reading speed")
+
+    if ftrs1["avg_pause"] > 0.6:
+        weaknesses.append("Hesitates between words")
+    else:
+        strengths.append("Smooth word flow")
+
+    # Audio 2 (paragraph reading)
+    if ftrs2["pause_count"] > 5:
+        weaknesses.append("Poor reading stamina (many long pauses)")
+    else:
+        strengths.append("Good reading endurance")
+
+    if ftrs2["max_pause"] > 2.5:
+        weaknesses.append("Loses place while reading")
+
+    if ftrs2["wpm"] < ftrs1["wpm"] * 0.7:
+        weaknesses.append("Fluency drops in longer text (working memory issue)")
+
+    # ---------------- Return ----------------
     return jsonify({
         "session_id": session_id,
-        **features,
-        **result
+
+        "audio_1_features": ftrs1,
+        "audio_2_features": ftrs2,
+
+        "combined_features": combined,
+
+        "reading_risk": result["status"],
+        "LD_score": round(result["LD_score"], 4),
+        "threshold": result["threshold"],
+
+        "child_strengths": list(set(strengths)),
+        "child_struggles": list(set(weaknesses))
     })
 
 
@@ -80,18 +200,59 @@ def reading():
 @app.route("/predict/emotion", methods=["POST"])
 def emotion():
     session_id = request.json.get("session_id")
-
     row = fetch_session(session_id)
+
     if not row:
         return jsonify({"error": "Session not found"}), 404
 
     features = extract_emotion_features(row)
     result = predict_emotion(features)
 
+    q1, q2, q3, q4, t1, t2, t3, t4 = features
+
+    emotions = ["Happiness", "Sadness", "Anger", "Distress"]
+    answers = [q1, q2, q3, q4]
+    times = [t1, t2, t3, t4]
+
+    strengths = []
+    weaknesses = []
+    details = []
+
+    avg_time = sum(times) / 4
+
+    for i in range(4):
+        emotion = emotions[i]
+
+        if answers[i] == 1:
+            strengths.append(f"Recognizes {emotion.lower()}")
+        else:
+            weaknesses.append(f"Struggles to recognize {emotion.lower()}")
+
+        speed = "slow" if times[i] > avg_time else "normal"
+
+        details.append({
+            "emotion": emotion,
+            "correct": bool(answers[i]),
+            "reaction_time": round(times[i], 2),
+            "speed": speed
+        })
+
+    # High-level social insight
+    if sum(answers) <= 2:
+        weaknesses.append("Weak emotional recognition (possible social perception difficulty)")
+
+    if max(times) > 4:
+        weaknesses.append("Slow emotional processing")
+
     return jsonify({
         "session_id": session_id,
-        "emotion_features": features,
-        **result
+
+        "emotion_prediction": result,
+
+        "question_analysis": details,
+
+        "child_strengths": list(set(strengths)),
+        "child_struggles": list(set(weaknesses))
     })
 
 # ---------------- Test 6 : Visual + Memory + Logic ----------------
@@ -172,29 +333,43 @@ from utils.image import download_image
 @app.route("/predict/handwriting", methods=["POST"])
 def handwriting():
     session_id = request.json.get("session_id")
-
     row = fetch_session(session_id)
+
     if not row:
         return jsonify({"error": "Session not found"}), 404
 
-    image_url = row[14]   # test3_image from DB
-
+    image_url = row[14]
     if not image_url:
         return jsonify({"error": "No handwriting image found"}), 400
 
-    try:
-        image_bytes = download_image(image_url)
-    except Exception as e:
-        return jsonify({"error": "Failed to download image"}), 500
-
+    image_bytes = download_image(image_url)
     score, diagnosis = analyze_handwriting(image_bytes)
+
+    strengths = []
+    weaknesses = []
+
+    if diagnosis == "NORMAL":
+        strengths.append("Good handwriting structure")
+        strengths.append("Strong fine motor control")
+    elif diagnosis == "MILD IRREGULARITY":
+        weaknesses.append("Inconsistent spacing between lines")
+        weaknesses.append("Handwriting still developing")
+    else:
+        weaknesses.append("Poor motor planning while writing")
+        weaknesses.append("Possible dysgraphia (writing difficulty)")
+
+    if score > 0.7:
+        weaknesses.append("Visual-motor coordination difficulty")
 
     return jsonify({
         "session_id": session_id,
-        "diagnosis": diagnosis,
-        "risk_score": score
-    })
+        "handwriting_risk": diagnosis,
+        "risk_score": round(score,3),
 
+        "child_strengths": strengths,
+        "child_struggles": weaknesses
+    })
+# ---------------- Test 5 : Auditory Processing ----------------
 
 @app.route("/predict/test5",methods=["POST"])
 def test5():
@@ -239,6 +414,81 @@ def test5():
         "strengths": strengths,
         "weaknesses": weaknesses
     })
+
+def run_dyscalculia_internal(session_id):
+    with app.test_request_context(json={"session_id": session_id}):
+        return run_prediction().get_json()
+
+def run_reading_internal(session_id):
+    with app.test_request_context(json={"session_id": session_id}):
+        return reading().get_json()
+
+def run_emotion_internal(session_id):
+    with app.test_request_context(json={"session_id": session_id}):
+        return emotion().get_json()
+
+def run_test5_internal(session_id):
+    with app.test_request_context(json={"session_id": session_id}):
+        return test5().get_json()
+
+def run_test6_internal(session_id):
+    with app.test_request_context(json={"session_id": session_id}):
+        return test6().get_json()
+
+def run_handwriting_internal(session_id):
+    with app.test_request_context(json={"session_id": session_id}):
+        return handwriting().get_json()
+
+"""
+@app.route("/predict/full_report", methods=["POST"])
+def full_report():
+    session_id = request.json.get("session_id")
+
+    return jsonify({
+        "session_id": session_id,
+
+        "math": run_dyscalculia_internal(session_id),
+        "reading": run_reading_internal(session_id),
+        "emotion": run_emotion_internal(session_id),
+        "auditory": run_test5_internal(session_id),
+        "visual_cognition": run_test6_internal(session_id),
+        "handwriting": run_handwriting_internal(session_id)
+    })
+"""
+@app.route("/predict/full_report", methods=["POST"])
+def full_report():
+    sid = request.json["session_id"]
+
+    math = requests.post("http://localhost:5000/predict/dyscalculia", json={"session_id": sid}).json()
+    reading = requests.post("http://localhost:5000/predict/reading_disability", json={"session_id": sid}).json()
+    emotion = requests.post("http://localhost:5000/predict/emotion", json={"session_id": sid}).json()
+    hearing = requests.post("http://localhost:5000/predict/test5", json={"session_id": sid}).json()
+    cognition = requests.post("http://localhost:5000/predict/test6", json={"session_id": sid}).json()
+    handwriting = requests.post("http://localhost:5000/predict/handwriting", json={"session_id": sid}).json()
+
+    full_json = {
+        "session_id": sid,
+        "math": math,
+        "reading": reading,
+        "emotion": emotion,
+        "hearing": hearing,
+        "cognition": cognition,
+        "handwriting": handwriting
+    }
+
+    # Send to Groq
+    llm_report = send_to_groq(full_json)
+
+    # Generate PDF
+    pdf_path = create_pdf(full_json, llm_report)
+
+    # Upload to Cloudinary
+    url = upload_to_cloudinary(pdf_path)
+
+    # Save URL in DB
+    save_report_url(sid, url)
+
+    return {"status":"completed", "report_url": url}
 
 
 
