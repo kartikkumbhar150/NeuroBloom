@@ -1,26 +1,48 @@
+import { v2 as cloudinary } from "cloudinary";
 import { NextResponse } from "next/server";
-import { createClient } from "@supabase/supabase-js";
 
-const supabase = createClient(
-  process.env.SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_KEY!
-);
+// Cloudinary configuration
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+});
 
 export async function POST(req: Request) {
-  const form = await req.formData();
-  const file = form.get("file") as File;
+  try {
+    const formData = await req.formData();
+    const file = formData.get("file") as File;
+    
+    if (!file) {
+      return NextResponse.json({ error: "No file provided" }, { status: 400 });
+    }
 
-  const filename = `${Date.now()}-${file.name}`;
+    // File ko buffer mein convert karein
+    const arrayBuffer = await file.arrayBuffer();
+    const buffer = Buffer.from(arrayBuffer);
 
-  const { data, error } = await supabase.storage
-    .from("audio")
-    .upload(filename, file);
+    // Cloudinary upload (Audio ke liye resource_type "video" zaroori hai)
+    const uploadResponse = await new Promise((resolve, reject) => {
+      cloudinary.uploader.upload_stream(
+        { 
+          resource_type: "video", 
+          folder: "reading_rocket_audio",
+          format: "webm" 
+        },
+        (error, result) => {
+          if (error) reject(error);
+          else resolve(result);
+        }
+      ).end(buffer);
+    });
 
-  if (error) return NextResponse.json({ error });
+    const result = uploadResponse as any;
 
-  const { data: url } = supabase.storage
-    .from("audio")
-    .getPublicUrl(filename);
+    // Direct Secure URL return karein
+    return NextResponse.json({ url: result.secure_url });
 
-  return NextResponse.json({ url: url.publicUrl });
+  } catch (err: any) {
+    console.error("Cloudinary Error:", err);
+    return NextResponse.json({ error: err.message }, { status: 500 });
+  }
 }

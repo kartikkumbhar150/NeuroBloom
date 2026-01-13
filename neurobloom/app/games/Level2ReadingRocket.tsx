@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { motion } from "framer-motion";
 import { Mic, Check, Square } from 'lucide-react';
 import { useRef, useEffect } from "react";
+import { set } from 'react-hook-form';
 
 
 interface Level2Props {
@@ -15,63 +16,86 @@ export function Level2ReadingRocket({ onComplete, onProgress }: Level2Props) {
   const [currentGame, setCurrentGame] = useState(0);
   const [isRecording, setIsRecording] = useState(false);
   const [hasRecorded, setHasRecorded] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
 
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunks = useRef<Blob[]>([]);
   const recordStartTime = useRef<number>(0);
 
 
-  const handleRecord = async () => {
+  const startRecording = async () => {
   if (isRecording) return;
 
   const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-  const mediaRecorder = new MediaRecorder(stream);
+  const mediaRecorder = new MediaRecorder(stream, { mimeType: "audio/webm" });
+
   mediaRecorderRef.current = mediaRecorder;
   audioChunks.current = [];
 
   mediaRecorder.ondataavailable = (e) => {
-    audioChunks.current.push(e.data);
+    if (e.data.size > 0) audioChunks.current.push(e.data);
   };
 
   mediaRecorder.onstop = async () => {
-    const audioBlob = new Blob(audioChunks.current, { type: "audio/webm" });
-    const formData = new FormData();
-    formData.append("file", audioBlob);
+  setIsSaving(true);
+  const audioBlob = new Blob(audioChunks.current, { type: "audio/webm" });
 
+  const formData = new FormData();
+  formData.append("file", audioBlob, "reading.webm");
+
+  try {
+    // Step 1: Upload to Cloudinary via our API
     const upload = await fetch("/api/upload", {
       method: "POST",
       body: formData
     });
 
-    const { url } = await upload.json();
+    const uploadRes = await upload.json();
+    const url = uploadRes.url; 
 
+    if (!url) {
+      console.error("Upload failed:", uploadRes.error);
+      setIsSaving(false);
+      setIsRecording(false);
+      return;
+    }
+
+    // Step 2: Save the Cloudinary URL to your existing PostgreSQL DB
     const sessionId = localStorage.getItem("sessionId");
-
     await fetch("/api/session/save", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         sessionId,
-        payload:
-          currentGame === 0
-            ? { test2_audio1: url }
-            : { test2_audio2: url }
+        payload: currentGame === 0 
+          ? { test2_audio1: url } 
+          : { test2_audio2: url }
       })
     });
 
     setHasRecorded(true);
-  };
+
+  } catch (error) {
+    console.error("Process failed:", error);
+  } finally {
+    mediaRecorderRef.current?.stream.getTracks().forEach(t => t.stop());
+    setIsRecording(false);
+    setIsSaving(false);
+  }
+};
 
   mediaRecorder.start();
-  recordStartTime.current = Date.now();
   setIsRecording(true);
 
-  setTimeout(() => {
-    mediaRecorder.stop();
-    stream.getTracks().forEach(t => t.stop());
-    setIsRecording(false);
-  }, 5000); // 5 seconds recording
+
 };
+  const finishRecording = () => {
+  if (!mediaRecorderRef.current) return;
+
+  mediaRecorderRef.current.stop(); // sirf stop karo, stream ko yahan mat chhedo
+};
+
+
 
 
   const handleNext = () => {
@@ -116,8 +140,8 @@ export function Level2ReadingRocket({ onComplete, onProgress }: Level2Props) {
         <motion.button
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
-          onClick={handleRecord}
-          disabled={isRecording}
+          onClick={isRecording ? finishRecording : startRecording}
+          disabled={isSaving}
           className={`relative ${
             isRecording
               ? 'bg-red-500'
@@ -191,8 +215,8 @@ export function Level2ReadingRocket({ onComplete, onProgress }: Level2Props) {
         <motion.button
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
-          onClick={handleRecord}
-          disabled={isRecording}
+          onClick={isRecording ? finishRecording : startRecording}
+          disabled={isSaving}
           className={`relative ${
             isRecording
               ? 'bg-red-500'

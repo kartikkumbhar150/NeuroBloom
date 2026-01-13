@@ -1,14 +1,17 @@
 import numpy as np
 
 def extract_features(row):
-    q = np.array(row[:6], dtype=float)
-    t = np.array(row[6:], dtype=float)
+    # Math answers
+    q = np.array(row[0:6], dtype=float)
+
+    # Math reaction times
+    t = np.array(row[6:12], dtype=float)
 
     accuracy = np.mean(q)
     mean_time = np.mean(t)
     std_time = np.std(t)
     fatigue = t[5] - t[0]
-    switch_cost = np.mean(t[3:]) - np.mean(t[:3])
+    switch_cost = np.mean(t[3:6]) - np.mean(t[0:3])
     efficiency = accuracy / max(mean_time, 0.1)
 
     count_error = 1 - q[0]
@@ -30,5 +33,3 @@ def extract_features(row):
         money_error,
         subtract_error
     ]
-
-
