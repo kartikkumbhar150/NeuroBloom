@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { motion } from "framer-motion";
-import { Camera, Mic, ArrowRight, Check, X, AlertCircle } from 'lucide-react';
+import { Camera, Mic, ArrowRight, CheckCircle2, XCircle, AlertCircle, Settings2, Video, ShieldCheck } from 'lucide-react';
 
 interface PermissionsScreenProps {
   onComplete: () => void;
@@ -44,193 +44,165 @@ export function PermissionsScreen({ onComplete, onBack }: PermissionsScreenProps
   const canProceed = cameraPermission === 'granted' && micPermission === 'granted';
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-cyan-100 via-teal-100 to-blue-100 flex items-center justify-center p-8">
+    <div className="h-screen w-full bg-[#f8fafc] flex items-center justify-center p-6 overflow-hidden font-sans">
       <motion.div
-        initial={{ opacity: 0, y: 50 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="max-w-3xl w-full"
+        initial={{ opacity: 0, scale: 0.98 }}
+        animate={{ opacity: 1, scale: 1 }}
+        className="w-full max-w-3xl"
       >
-        <div className="bg-white rounded-3xl shadow-2xl p-12">
-          {/* Header */}
-          <div className="text-center mb-10">
-            <motion.div
-              animate={{ scale: [1, 1.1, 1] }}
-              transition={{ duration: 2, repeat: Infinity }}
-              className="text-8xl mb-4"
-            >
-              🎥
-            </motion.div>
-            <h1 className="text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-cyan-600 to-teal-600 mb-3">
-              Permissions Required
-            </h1>
-            <p className="text-xl text-gray-600">
-              We need access to your camera and microphone for the assessment
-            </p>
-          </div>
-
-          {/* Info Alert */}
-          <div className="bg-gradient-to-r from-blue-50 to-cyan-50 border-2 border-blue-200 rounded-2xl p-6 mb-8">
-            <div className="flex items-start gap-4">
-              <AlertCircle className="w-6 h-6 text-blue-600 flex-shrink-0 mt-1" />
+        <div className="bg-white rounded-[1.5rem] shadow-2xl shadow-slate-200 border border-slate-200 overflow-hidden">
+          
+          {/* Clinical Header */}
+          <div className="bg-slate-900 px-10 py-5 flex justify-between items-center">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-indigo-500/10 rounded-lg border border-indigo-500/20">
+                <Settings2 className="text-indigo-400" size={20} />
+              </div>
               <div>
-                <h3 className="text-lg font-bold text-blue-900 mb-2">Why do we need these permissions?</h3>
-                <ul className="space-y-1 text-blue-800">
-                  <li className="flex items-center gap-2">
-                    <span className="text-xl">📹</span>
-                    <span>Camera: To record reading sessions and monitor engagement</span>
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <span className="text-xl">🎤</span>
-                    <span>Microphone: To capture and analyze speech during reading tasks</span>
-                  </li>
-                </ul>
+                <h1 className="text-lg font-bold text-white tracking-tight">Hardware Calibration</h1>
+                <p className="text-slate-400 text-[10px] uppercase tracking-[0.2em] font-bold">System Readiness Check</p>
               </div>
+            </div>
+            <div className="flex items-center gap-2 px-3 py-1 bg-white/5 rounded-full border border-white/10">
+              <ShieldCheck size={14} className="text-indigo-400" />
+              <span className="text-[10px] text-white font-bold uppercase tracking-wider">Secure Channel</span>
             </div>
           </div>
 
-          {/* Permission Cards */}
-          <div className="space-y-6 mb-10">
-            {/* Camera Permission */}
-            <div
-              className={`border-2 rounded-2xl p-6 transition-all ${
-                cameraPermission === 'granted'
-                  ? 'bg-green-50 border-green-500'
-                  : cameraPermission === 'denied'
-                  ? 'bg-red-50 border-red-500'
-                  : 'bg-gray-50 border-gray-300'
-              }`}
-            >
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-4">
-                  <div
-                    className={`w-16 h-16 rounded-2xl flex items-center justify-center ${
-                      cameraPermission === 'granted'
-                        ? 'bg-green-500'
-                        : cameraPermission === 'denied'
-                        ? 'bg-red-500'
-                        : 'bg-cyan-500'
-                    }`}
-                  >
-                    <Camera className="w-8 h-8 text-white" />
-                  </div>
-                  <div>
-                    <h3 className="text-2xl font-bold text-gray-800">Camera Access</h3>
-                    <p className="text-gray-600">
-                      {cameraPermission === 'granted'
-                        ? '✅ Permission granted'
-                        : cameraPermission === 'denied'
-                        ? '❌ Permission denied - please enable in browser settings'
-                        : 'Click to grant camera access'}
-                    </p>
-                  </div>
-                </div>
-                {cameraPermission === 'pending' && (
-                  <motion.button
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    onClick={requestCameraPermission}
-                    disabled={requestingCamera}
-                    className="bg-gradient-to-r from-cyan-500 to-teal-500 text-white text-lg font-bold px-8 py-4 rounded-xl shadow-lg hover:shadow-xl transition-all"
-                  >
-                    {requestingCamera ? 'Requesting...' : 'Allow Camera'}
-                  </motion.button>
-                )}
-                {cameraPermission === 'granted' && (
-                  <div className="w-12 h-12 bg-green-500 rounded-full flex items-center justify-center">
-                    <Check className="w-8 h-8 text-white" />
-                  </div>
-                )}
-                {cameraPermission === 'denied' && (
-                  <div className="w-12 h-12 bg-red-500 rounded-full flex items-center justify-center">
-                    <X className="w-8 h-8 text-white" />
-                  </div>
-                )}
-              </div>
+          <div className="p-8">
+            {/* Minimal Info Alert */}
+            <div className="flex items-center gap-3 px-5 py-3 bg-indigo-50 border border-indigo-100 rounded-xl mb-8">
+              <AlertCircle size={16} className="text-indigo-600" />
+              <p className="text-[12px] text-indigo-900 font-medium">
+                Clinical assessment requires active audio-visual monitoring for biometric analysis.
+              </p>
             </div>
 
-            {/* Microphone Permission */}
-            <div
-              className={`border-2 rounded-2xl p-6 transition-all ${
-                micPermission === 'granted'
-                  ? 'bg-green-50 border-green-500'
-                  : micPermission === 'denied'
-                  ? 'bg-red-50 border-red-500'
-                  : 'bg-gray-50 border-gray-300'
-              }`}
-            >
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-4">
-                  <div
-                    className={`w-16 h-16 rounded-2xl flex items-center justify-center ${
-                      micPermission === 'granted'
-                        ? 'bg-green-500'
-                        : micPermission === 'denied'
-                        ? 'bg-red-500'
-                        : 'bg-teal-500'
-                    }`}
-                  >
-                    <Mic className="w-8 h-8 text-white" />
+            {/* Permission Grid - Two Columns to save vertical space */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+              
+              {/* Camera Section */}
+              <div className={`p-6 rounded-2xl border-2 transition-all ${
+                cameraPermission === 'granted' ? 'bg-emerald-50/30 border-emerald-500/20' : 
+                cameraPermission === 'denied' ? 'bg-red-50/30 border-red-500/20' : 'bg-slate-50 border-slate-100'
+              }`}>
+                <div className="flex flex-col items-center text-center space-y-4">
+                  <div className={`w-12 h-12 rounded-full flex items-center justify-center transition-colors ${
+                    cameraPermission === 'granted' ? 'bg-emerald-500' : 
+                    cameraPermission === 'denied' ? 'bg-red-500' : 'bg-slate-200'
+                  }`}>
+                    <Video size={20} className={cameraPermission === 'pending' ? 'text-slate-600' : 'text-white'} />
                   </div>
                   <div>
-                    <h3 className="text-2xl font-bold text-gray-800">Microphone Access</h3>
-                    <p className="text-gray-600">
-                      {micPermission === 'granted'
-                        ? '✅ Permission granted'
-                        : micPermission === 'denied'
-                        ? '❌ Permission denied - please enable in browser settings'
-                        : 'Click to grant microphone access'}
-                    </p>
+                    <h3 className="text-sm font-bold text-slate-900 uppercase tracking-tight">Optical Sensor</h3>
+                    <p className="text-[11px] text-slate-500 mt-1 font-medium leading-relaxed">Required for gaze tracking and engagement metrics.</p>
                   </div>
+                  
+                  {cameraPermission === 'pending' ? (
+                    <button 
+                      onClick={requestCameraPermission}
+                      disabled={requestingCamera}
+                      className="w-full py-2.5 bg-white border border-slate-200 rounded-lg text-xs font-bold text-slate-700 hover:bg-slate-50 transition-all shadow-sm"
+                    >
+                      {requestingCamera ? 'Initializing...' : 'Enable Camera'}
+                    </button>
+                  ) : (
+                    <div className={`flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider ${
+                      cameraPermission === 'granted' ? 'text-emerald-600' : 'text-red-600'
+                    }`}>
+                      {cameraPermission === 'granted' ? <CheckCircle2 size={14} /> : <XCircle size={14} />}
+                      {cameraPermission === 'granted' ? 'Configured' : 'Access Blocked'}
+                    </div>
+                  )}
                 </div>
-                {micPermission === 'pending' && (
-                  <motion.button
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    onClick={requestMicPermission}
-                    disabled={requestingMic}
-                    className="bg-gradient-to-r from-teal-500 to-cyan-500 text-white text-lg font-bold px-8 py-4 rounded-xl shadow-lg hover:shadow-xl transition-all"
-                  >
-                    {requestingMic ? 'Requesting...' : 'Allow Microphone'}
-                  </motion.button>
-                )}
-                {micPermission === 'granted' && (
-                  <div className="w-12 h-12 bg-green-500 rounded-full flex items-center justify-center">
-                    <Check className="w-8 h-8 text-white" />
-                  </div>
-                )}
-                {micPermission === 'denied' && (
-                  <div className="w-12 h-12 bg-red-500 rounded-full flex items-center justify-center">
-                    <X className="w-8 h-8 text-white" />
-                  </div>
-                )}
               </div>
+
+              {/* Microphone Section */}
+              <div className={`p-6 rounded-2xl border-2 transition-all ${
+                micPermission === 'granted' ? 'bg-emerald-50/30 border-emerald-500/20' : 
+                micPermission === 'denied' ? 'bg-red-50/30 border-red-500/20' : 'bg-slate-50 border-slate-100'
+              }`}>
+                <div className="flex flex-col items-center text-center space-y-4">
+                  <div className={`w-12 h-12 rounded-full flex items-center justify-center transition-colors ${
+                    micPermission === 'granted' ? 'bg-emerald-500' : 
+                    micPermission === 'denied' ? 'bg-red-500' : 'bg-slate-200'
+                  }`}>
+                    <Mic size={20} className={micPermission === 'pending' ? 'text-slate-600' : 'text-white'} />
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-bold text-slate-900 uppercase tracking-tight">Acoustic Sensor</h3>
+                    <p className="text-[11px] text-slate-500 mt-1 font-medium leading-relaxed">Required for phonological and speech evaluation.</p>
+                  </div>
+
+                  {micPermission === 'pending' ? (
+                    <button 
+                      onClick={requestMicPermission}
+                      disabled={requestingMic}
+                      className="w-full py-2.5 bg-white border border-slate-200 rounded-lg text-xs font-bold text-slate-700 hover:bg-slate-50 transition-all shadow-sm"
+                    >
+                      {requestingMic ? 'Initializing...' : 'Enable Mic'}
+                    </button>
+                  ) : (
+                    <div className={`flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider ${
+                      micPermission === 'granted' ? 'text-emerald-600' : 'text-red-600'
+                    }`}>
+                      {micPermission === 'granted' ? <CheckCircle2 size={14} /> : <XCircle size={14} />}
+                      {micPermission === 'granted' ? 'Configured' : 'Access Blocked'}
+                    </div>
+                  )}
+                </div>
+              </div>
+
+            </div>
+
+            {/* Bottom Action Area */}
+            <div className="pt-6 border-t border-slate-100">
+              <motion.button
+                whileHover={canProceed ? { scale: 1.01 } : {}}
+                whileTap={canProceed ? { scale: 0.99 } : {}}
+                onClick={onComplete}
+                disabled={!canProceed}
+                className={`w-full py-4 rounded-xl font-bold text-sm transition-all flex items-center justify-center gap-3 shadow-xl ${
+                  canProceed 
+                    ? 'bg-indigo-600 text-white shadow-indigo-100 hover:bg-indigo-700' 
+                    : 'bg-slate-100 text-slate-400 cursor-not-allowed shadow-none'
+                }`}
+              >
+                {canProceed ? 'Begin Assessment Protocol' : 'Complete Hardware Setup to Proceed'}
+                {canProceed && <ArrowRight size={18} />}
+              </motion.button>
+              
+              <p className="text-center text-[10px] text-slate-400 mt-4 leading-relaxed font-bold uppercase tracking-widest">
+                Hardware validation verified by NeuroBloom Core
+              </p>
             </div>
           </div>
-
-          {/* Continue Button */}
-          <motion.button
-            whileHover={{ scale: canProceed ? 1.02 : 1 }}
-            whileTap={{ scale: canProceed ? 0.98 : 1 }}
-            onClick={onComplete}
-            disabled={!canProceed}
-            className={`w-full text-white text-2xl font-black py-6 rounded-2xl shadow-lg transition-all flex items-center justify-center gap-3 ${
-              canProceed
-                ? 'bg-gradient-to-r from-cyan-500 to-teal-500 hover:shadow-xl'
-                : 'bg-gray-400 cursor-not-allowed'
-            }`}
-          >
-            {canProceed ? 'Start Assessment' : 'Grant All Permissions to Continue'}
-            {canProceed && <ArrowRight className="w-8 h-8" />}
-          </motion.button>
         </div>
 
-        {/* Progress indicator */}
-        <div className="mt-8 flex justify-center gap-2">
-          <div className="w-12 h-2 bg-cyan-500 rounded-full"></div>
-          <div className="w-12 h-2 bg-cyan-500 rounded-full"></div>
-          <div className="w-12 h-2 bg-cyan-500 rounded-full"></div>
+        {/* Global Progress Bar */}
+        <div className="mt-8 flex justify-center items-center gap-8">
+           <Step label="Patient Info" completed />
+           <div className="w-12 h-[1px] bg-indigo-600" />
+           <Step label="Legal Consent" completed />
+           <div className="w-12 h-[1px] bg-indigo-600" />
+           <Step label="Hardware" active />
         </div>
       </motion.div>
+    </div>
+  );
+}
+
+function Step({ label, active = false, completed = false }: { label: string, active?: boolean, completed?: boolean }) {
+  return (
+    <div className="flex items-center gap-2">
+      <div className={`w-2.5 h-2.5 rounded-full transition-all ${
+        completed ? 'bg-indigo-600' : 
+        active ? 'bg-indigo-600 ring-4 ring-indigo-50' : 
+        'bg-slate-300'
+      }`} />
+      <span className={`text-[10px] font-bold uppercase tracking-widest ${active || completed ? 'text-slate-900' : 'text-slate-400'}`}>
+        {label}
+      </span>
     </div>
   );
 }

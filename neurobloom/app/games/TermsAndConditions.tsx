@@ -1,177 +1,188 @@
 "use client";
 
-import { useState } from 'react';
+import { useState } from "react";
 import { motion } from "framer-motion";
-import { Shield, ArrowRight, CheckCircle } from 'lucide-react';
+import {
+  ArrowRight,
+  CheckCircle2,
+  ShieldCheck,
+  Lock,
+  Eye,
+  Scale,
+} from "lucide-react";
 
 interface TermsAndConditionsProps {
   onAccept: () => void;
   onBack?: () => void;
 }
 
-export function TermsAndConditions({ onAccept, onBack }: TermsAndConditionsProps) {
+export function TermsAndConditions({ onAccept }: TermsAndConditionsProps) {
   const [accepted, setAccepted] = useState(false);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-100 via-purple-100 to-pink-100 flex items-center justify-center p-8">
+    <div className="relative h-screen w-full bg-gradient-to-br from-indigo-50 via-slate-50 to-white flex items-center justify-center p-6 overflow-hidden font-sans">
+      
+      {/* Ambient medical glow */}
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,rgba(99,102,241,0.15),transparent_40%),radial-gradient(circle_at_80%_80%,rgba(56,189,248,0.12),transparent_40%)]" />
+
       <motion.div
-        initial={{ opacity: 0, y: 50 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="max-w-4xl w-full"
+        initial={{ opacity: 0, scale: 0.97 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ duration: 0.6 }}
+        className="relative w-full max-w-3xl z-10"
       >
-        <div className="bg-white rounded-3xl shadow-2xl p-12">
+        <div className="bg-white/80 backdrop-blur-xl rounded-[1.75rem] shadow-[0_40px_80px_-20px_rgba(0,0,0,0.12)] border border-white/50 overflow-hidden">
+
           {/* Header */}
-          <div className="text-center mb-8">
-            <motion.div
-              animate={{ scale: [1, 1.1, 1] }}
-              transition={{ duration: 2, repeat: Infinity }}
-              className="inline-block mb-4"
-            >
-              <Shield className="w-20 h-20 text-indigo-600" />
-            </motion.div>
-            <h1 className="text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-purple-600 mb-3">
-              Terms & Conditions
-            </h1>
-            <p className="text-xl text-gray-600">
-              Please review before starting the assessment
-            </p>
-          </div>
-
-          {/* Terms Content */}
-          <div className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-2xl p-8 mb-8 max-h-96 overflow-y-auto">
-            <div className="space-y-6 text-gray-700">
+          <div className="bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 px-10 py-6 flex justify-between items-center border-b border-white/10">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-indigo-500/10 rounded-lg border border-indigo-500/20">
+                <ShieldCheck className="text-indigo-400" size={20} />
+              </div>
               <div>
-                <h3 className="text-xl font-bold text-indigo-700 mb-3 flex items-center gap-2">
-                  <span className="text-2xl">🎯</span>
-                  Purpose of Assessment
-                </h3>
-                <p className="leading-relaxed">
-                  This assessment is designed to evaluate cognitive development, reading behavior, 
-                  and early learning patterns in children aged 6-8. The results will help identify 
-                  potential areas for support and celebrate strengths.
+                <h1 className="text-xl font-black text-white tracking-tight">
+                  Clinical Consent & Terms
+                </h1>
+                <p className="text-indigo-300 text-[10px] uppercase tracking-[0.25em] font-black">
+                  NeuroBloom Compliance v2.4
                 </p>
               </div>
-
-              <div>
-                <h3 className="text-xl font-bold text-indigo-700 mb-3 flex items-center gap-2">
-                  <span className="text-2xl">🔒</span>
-                  Privacy & Data Protection
-                </h3>
-                <ul className="space-y-2 list-disc list-inside leading-relaxed">
-                  <li>All data collected during this assessment is encrypted and stored securely</li>
-                  <li>Information will only be used for educational assessment purposes</li>
-                  <li>No personally identifiable information will be shared with third parties</li>
-                  <li>Parents/guardians have the right to request data deletion at any time</li>
-                </ul>
-              </div>
-
-              <div>
-                <h3 className="text-xl font-bold text-indigo-700 mb-3 flex items-center gap-2">
-                  <span className="text-2xl">📹</span>
-                  Recording & Monitoring
-                </h3>
-                <p className="leading-relaxed">
-                  This assessment may use camera and microphone to:
-                </p>
-                <ul className="mt-2 space-y-2 list-disc list-inside leading-relaxed">
-                  <li>Record reading sessions for analysis</li>
-                  <li>Monitor engagement and behavioral patterns</li>
-                  <li>Capture handwriting samples for evaluation</li>
-                </ul>
-              </div>
-
-              <div>
-                <h3 className="text-xl font-bold text-indigo-700 mb-3 flex items-center gap-2">
-                  <span className="text-2xl">⚖️</span>
-                  Ethical Use
-                </h3>
-                <p className="leading-relaxed">
-                  NeuroBloom is committed to ethical AI use in healthcare. This platform is designed 
-                  to support—not replace—professional educational and medical assessment. Results 
-                  should be reviewed by qualified professionals.
-                </p>
-              </div>
-
-              <div>
-                <h3 className="text-xl font-bold text-indigo-700 mb-3 flex items-center gap-2">
-                  <span className="text-2xl">👨‍👩‍👧</span>
-                  Parental Consent
-                </h3>
-                <p className="leading-relaxed">
-                  By proceeding, you confirm that you are the parent or legal guardian of the child 
-                  and consent to their participation in this assessment.
-                </p>
-              </div>
-
-              <div>
-                <h3 className="text-xl font-bold text-indigo-700 mb-3 flex items-center gap-2">
-                  <span className="text-2xl">🎮</span>
-                  Assessment Environment
-                </h3>
-                <ul className="space-y-2 list-disc list-inside leading-relaxed">
-                  <li>Ensure a quiet, comfortable environment for the child</li>
-                  <li>The assessment will take approximately 20 minutes</li>
-                  <li>The child can take breaks if needed</li>
-                  <li>No pressure—this is a supportive learning experience</li>
-                </ul>
-              </div>
+            </div>
+            <div className="hidden sm:flex items-center gap-2 px-3 py-1 bg-emerald-500/10 rounded-full border border-emerald-500/20">
+              <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+              <span className="text-[10px] text-emerald-400 font-bold uppercase tracking-wider">
+                HIPAA Compliant
+              </span>
             </div>
           </div>
 
-          {/* Acceptance Checkbox */}
-          <motion.div
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
-            onClick={() => setAccepted(!accepted)}
-            className={`cursor-pointer mb-8 p-6 rounded-2xl border-2 transition-all ${
-              accepted
-                ? 'bg-gradient-to-r from-green-50 to-emerald-50 border-green-500'
-                : 'bg-gray-50 border-gray-300 hover:border-indigo-400'
-            }`}
-          >
-            <div className="flex items-center gap-4">
-              <div
-                className={`w-8 h-8 rounded-lg border-2 flex items-center justify-center transition-all ${
+          {/* Content */}
+          <div className="p-8">
+
+            {/* Terms Box */}
+            <div className="bg-gradient-to-b from-white to-slate-50 border border-slate-200/70 rounded-2xl p-6 mb-6 max-h-64 overflow-y-auto shadow-inner">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-slate-600">
+
+                {[
+                  {
+                    title: "Data Usage",
+                    icon: <Eye size={14} className="text-indigo-600" />,
+                    text: "Assessment data is used solely for identifying cognitive patterns. Analysis is performed by encrypted AI models with no third-party data extraction.",
+                  },
+                  {
+                    title: "Privacy Protocols",
+                    icon: <Lock size={14} className="text-indigo-600" />,
+                    text: "Multi-layer AES-256 encryption. Personally Identifiable Information (PII) is anonymized before clinical processing.",
+                  },
+                  {
+                    title: "Medical Disclaimer",
+                    icon: <Scale size={14} className="text-indigo-600" />,
+                    text: "This is a diagnostic aid tool. Results must be validated by a licensed clinical professional or educational psychologist.",
+                  },
+                  {
+                    title: "Guardian Consent",
+                    icon: <CheckCircle2 size={14} className="text-indigo-600" />,
+                    text: "By proceeding, you verify you are the legal guardian and authorize the collection of biometric and reading performance data.",
+                  },
+                ].map((item, i) => (
+                  <motion.section
+                    key={i}
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: i * 0.1 }}
+                  >
+                    <h3 className="text-xs font-black text-slate-900 uppercase tracking-widest mb-2 flex items-center gap-2">
+                      {item.icon}
+                      {item.title}
+                    </h3>
+                    <p className="text-[13px] leading-relaxed">
+                      {item.text}
+                    </p>
+                  </motion.section>
+                ))}
+
+              </div>
+            </div>
+
+            {/* Accept Row */}
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-6 border-t border-slate-100 pt-6">
+              <label className="flex items-center gap-3 cursor-pointer group">
+                <input
+                  type="checkbox"
+                  className="sr-only"
+                  checked={accepted}
+                  onChange={() => setAccepted(!accepted)}
+                />
+                <div
+                  className={`w-7 h-7 rounded-lg border-2 transition-all flex items-center justify-center shadow-sm ${
+                    accepted
+                      ? "bg-indigo-600 border-indigo-600 shadow-indigo-300/40"
+                      : "border-slate-300 bg-white group-hover:border-indigo-400"
+                  }`}
+                >
+                  {accepted && <CheckCircle2 size={14} className="text-white" />}
+                </div>
+                <span className="text-xs font-bold text-slate-500 uppercase tracking-tight">
+                  I accept the clinical terms & conditions
+                </span>
+              </label>
+
+              <motion.button
+                whileHover={accepted ? { scale: 1.05 } : {}}
+                whileTap={accepted ? { scale: 0.97 } : {}}
+                onClick={onAccept}
+                disabled={!accepted}
+                className={`px-10 py-4 rounded-xl font-bold text-sm transition-all flex items-center gap-3 ${
                   accepted
-                    ? 'bg-green-500 border-green-500'
-                    : 'border-gray-400'
+                    ? "bg-gradient-to-r from-indigo-600 to-indigo-500 text-white shadow-[0_20px_40px_-10px_rgba(99,102,241,0.6)] hover:from-indigo-700 hover:to-indigo-600"
+                    : "bg-slate-100 text-slate-400 cursor-not-allowed"
                 }`}
               >
-                {accepted && <CheckCircle className="w-6 h-6 text-white" />}
-              </div>
-              <p className="text-lg font-semibold text-gray-700">
-                I have read and accept the terms and conditions, and consent to the assessment
-              </p>
+                Proceed to Assessment
+                <ArrowRight size={18} />
+              </motion.button>
             </div>
-          </motion.div>
-
-          {/* Action Buttons */}
-          <div className="flex gap-4">
-            <motion.button
-              type="button"
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              onClick={onAccept}
-              disabled={!accepted}
-              className={`flex-1 text-white text-2xl font-black py-6 rounded-2xl shadow-lg transition-all flex items-center justify-center gap-3 ${
-                accepted
-                  ? 'bg-gradient-to-r from-indigo-500 to-purple-500 hover:shadow-xl'
-                  : 'bg-gray-400 cursor-not-allowed'
-              }`}
-            >
-              Accept & Continue
-              <ArrowRight className="w-8 h-8" />
-            </motion.button>
           </div>
         </div>
 
-        {/* Progress indicator */}
-        <div className="mt-8 flex justify-center gap-2">
-          <div className="w-12 h-2 bg-indigo-500 rounded-full"></div>
-          <div className="w-12 h-2 bg-indigo-500 rounded-full"></div>
-          <div className="w-12 h-2 bg-gray-300 rounded-full"></div>
+        {/* Stepper */}
+        <div className="mt-10 flex justify-center items-center gap-10 bg-white/60 backdrop-blur-lg px-8 py-4 rounded-full shadow-lg border border-white">
+          <Step label="Patient Info" completed />
+          <Step label="Legal Consent" active />
+          <Step label="Assessment" />
         </div>
       </motion.div>
+    </div>
+  );
+}
+
+function Step({
+  label,
+  active = false,
+  completed = false,
+}: {
+  label: string;
+  active?: boolean;
+  completed?: boolean;
+}) {
+  return (
+    <div className="flex items-center gap-2">
+      <div
+        className={`w-3 h-3 rounded-full ${
+          completed
+            ? "bg-indigo-600"
+            : active
+            ? "bg-indigo-600 ring-4 ring-indigo-100"
+            : "bg-slate-300"
+        }`}
+      />
+      <span
+        className={`text-[10px] font-black uppercase tracking-widest ${
+          active || completed ? "text-slate-900" : "text-slate-400"
+        }`}
+      >
+        {label}
+      </span>
     </div>
   );
 }
