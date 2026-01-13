@@ -25,9 +25,8 @@ export async function POST(req: Request) {
     const uploadResponse = await new Promise((resolve, reject) => {
       cloudinary.uploader.upload_stream(
         { 
-          resource_type: "video", 
-          folder: "reading_rocket_audio",
-          format: "webm" 
+          resource_type: "auto", 
+          folder: "reading_rocket_audio"
         },
         (error, result) => {
           if (error) reject(error);
