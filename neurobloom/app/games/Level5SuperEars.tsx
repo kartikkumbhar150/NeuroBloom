@@ -21,10 +21,48 @@ export function Level5SuperEars({ onComplete, onProgress }: Level5Props) {
   const beepStartTime = useRef(0);
   const reactions = useRef<number[]>([]);
   const questionStartTime = useRef(0);
+  const beepAudio = useRef<HTMLAudioElement | null>(null);
+  const playingAudio = useRef<HTMLAudioElement | null>(null);
+  const gaaaAudio = useRef<HTMLAudioElement | null>(null);
+  const kaaaAudio = useRef<HTMLAudioElement | null>(null);
 
   useEffect(() => {
-  questionStartTime.current = Date.now();
-}, [currentGame]);
+  beepAudio.current = new Audio("/sounds/beep.mp3");
+  beepAudio.current.preload = "auto";
+
+  playingAudio.current = new Audio("/sounds/playing.mp3");
+  playingAudio.current.preload = "auto";
+
+  gaaaAudio.current = new Audio("/sounds/gaaa.mp3");
+  gaaaAudio.current.preload = "auto";
+
+  kaaaAudio.current = new Audio("/sounds/kaaa.mp3");
+  kaaaAudio.current.preload = "auto";
+}, []);
+
+
+
+  useEffect(() => {
+    questionStartTime.current = Date.now();
+  }, [currentGame]);
+
+  const unlockAudio = async () => {
+  const sounds = [
+    beepAudio.current,
+    playingAudio.current,
+    gaaaAudio.current,
+    kaaaAudio.current
+  ];
+
+  for (let sound of sounds) {
+    if (!sound) continue;
+    try {
+      await sound.play();
+      sound.pause();
+      sound.currentTime = 0;
+    } catch {}
+  }
+};
 
 
 
@@ -62,7 +100,12 @@ export function Level5SuperEars({ onComplete, onProgress }: Level5Props) {
     count++;
     setBeepCount(count);
 
-    beepStartTime.current = Date.now();   // beep started
+    beepStartTime.current = Date.now();
+    if (beepAudio.current) {
+  beepAudio.current.currentTime = 0;
+  beepAudio.current.play();
+}
+
 
     if (count >= 5) {
       clearInterval(interval);
@@ -95,14 +138,25 @@ export function Level5SuperEars({ onComplete, onProgress }: Level5Props) {
 };
 
 
-  const playSound = (word: string) => {
-    setSoundPlaying(true);
-    // In a real app, this would play actual audio
-    // For now, we'll just show visual feedback
-    setTimeout(() => {
-      setSoundPlaying(false);
-    }, 1000);
+
+  const playSound = (type: "playing" | "gaaa" | "kaaa") => {
+  setSoundPlaying(true);
+
+  let audio;
+  if (type === "playing") audio = playingAudio.current;
+  if (type === "gaaa") audio = gaaaAudio.current;
+  if (type === "kaaa") audio = kaaaAudio.current;
+
+  if (!audio) return;
+
+  audio.currentTime = 0;
+  audio.play();
+
+  audio.onended = () => {
+    setSoundPlaying(false);
   };
+};
+
 
   const games = [
     // Game 1: Beep Test
@@ -132,7 +186,11 @@ export function Level5SuperEars({ onComplete, onProgress }: Level5Props) {
           <motion.button
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
-            onClick={startBeepTest}
+            onClick={async () => {
+  await unlockAudio();   //  unlock browser audio
+  startBeepTest();
+}}
+
             className="bg-gradient-to-r from-cyan-500 to-teal-500 text-white text-3xl font-black px-16 py-12 rounded-full shadow-2xl"
           >
             <div className="flex items-center gap-4">
