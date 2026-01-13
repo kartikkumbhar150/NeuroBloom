@@ -2,6 +2,10 @@ from flask import Flask, request, jsonify
 from utils.fetch import fetch_session
 from utils.audio import download_audio
 from utils.speech import transcribe
+from utils.features_test6 import extract_features as extract_test6_features
+from utils.test6_model import predict_test6
+import numpy as np
+
 
 # ================= MODELS =================
 
@@ -84,6 +88,77 @@ def emotion():
         "session_id": session_id,
         "emotion_features": features,
         **result
+    })
+
+# ---------------- Test 6 : Visual + Memory + Logic ----------------
+@app.route("/predict/test6", methods=["POST"])
+def test6():
+    session_id = request.json.get("session_id")
+
+    row = fetch_session(session_id)
+    if not row:
+        return jsonify({"error": "Session not found"}), 404
+
+    # Raw scores and times
+    scores = [0 if x is None else int(x) for x in row[22:26]]
+    times  = [8 if x is None else float(x) for x in row[26:30]]
+
+
+    # ML features
+    features = extract_test6_features(row)
+
+    # ML prediction
+    prediction = predict_test6(features)
+
+    strengths = []
+    weaknesses = []
+
+    # Memory
+    if scores[1] == 1:
+        strengths.append("Strong visual working memory (can remember images well)")
+    else:
+        weaknesses.append("Weak image memory (forgets visual information)")
+
+    # Spatial (mirror)
+    if scores[2] == 1:
+        strengths.append("Good visual-spatial ability")
+    else:
+        weaknesses.append("Mirror image confusion (spatial processing weak)")
+
+    # Pattern
+    if scores[3] == 1:
+        strengths.append("Strong pattern and logical reasoning")
+    else:
+        weaknesses.append("Difficulty understanding patterns and sequences")
+
+    # Processing speed
+    avg_time = np.mean(times)
+    if avg_time < 4:
+        strengths.append("Fast thinking and response speed")
+    else:
+        weaknesses.append("Slow cognitive processing")
+
+    # Attention stability
+    if np.std(times) > 1.5:
+        weaknesses.append("Inconsistent attention during tasks")
+
+    return jsonify({
+        "session_id": session_id,
+        "test6_scores": {
+            "odd_one_out": scores[0],
+            "memory": scores[1],
+            "mirror": scores[2],
+            "pattern": scores[3]
+        },
+        "test6_times": {
+            "odd_one_out": times[0],
+            "memory": times[1],
+            "mirror": times[2],
+            "pattern": times[3]
+        },
+        "cognitive_prediction": prediction,
+        "strengths": strengths,
+        "weaknesses": weaknesses
     })
 
 
