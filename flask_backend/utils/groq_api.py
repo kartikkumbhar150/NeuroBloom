@@ -12,30 +12,50 @@ MODEL = "llama-3.1-8b-instant"
 
 def send_to_groq(report_json):
     """
-    Sends full neuro-cognitive JSON to Groq AI
-    Returns expert doctor-style analysis
+    Sends neuro-cognitive JSON to Groq and gets a structured diagnostic response.
     """
-
+    
     prompt = f"""
-You are a child psychologist AI.
+    You are a Child Neuropsychologist AI specializing in developmental disorders.
+    
+    TASK: Analyze the provided JSON data from 6 cognitive modules (Math, Reading, Emotion, Memory, Hearing, Handwriting) 
+    and perform a clinical screening.
 
-The following JSON contains results from 6 cognitive tests:
-Math, Reading, Emotion, Memory, Hearing, Handwriting.
+    STEP 1: For EACH disability listed below, determine the 'Risk Status' based on the data.
+    Categories: Dyslexia, Dysgraphia, Dyscalculia, Auditory Processing Disorder (APD), Non-Verbal Learning Disability (NVLD), ADHD, Autism Spectrum Disorder (ASD).
+    
+    Allowed Statuses: "Not Detected", "Low Risk", "Medium Risk", "High Risk".
 
-Your job:
-1. Identify learning disabilities (Dyslexia, Dyscalculia, ADHD, ASD, Dysgraphia)
-2. Explain why based on data
-3. List strengths
-4. List weaknesses
-5. Suggest therapies & activities
-6. Give risk level
+    STEP 2: Identify Child's Strengths and Weaknesses.
+    STEP 3: Suggest a Detailed Action Plan (Therapies and Daily Activities).
 
-DATA:
-{report_json}
+    DATA TO ANALYZE:
+    {report_json}
 
-Return in professional JSON format with sections:
-diagnosis, reasons, strengths, weaknesses, therapies, school_support, risk_level
-"""
+    STRICT JSON OUTPUT FORMAT:
+    {{
+      "screenings": [
+        {{ "disability": "Dyslexia", "status": "Low Risk", "finding": "Reason based on reading speed/accuracy" }},
+        {{ "disability": "Dysgraphia", "status": "Not Detected", "finding": "..." }},
+        {{ "disability": "Dyscalculia", "status": "...", "finding": "..." }},
+        {{ "disability": "Auditory Processing Disorder", "status": "...", "finding": "..." }},
+        {{ "disability": "Non-verbal learning disabilities", "status": "...", "finding": "..." }},
+        {{ "disability": "ADHD", "status": "...", "finding": "..." }},
+        {{ "disability": "Autism Spectrum Disorder", "status": "...", "finding": "..." }}
+      ],
+      "overall_assessment": {{
+        "strengths": ["list", "of", "strengths"],
+        "weaknesses": ["list", "of", "weaknesses"],
+        "detailed_activities": [
+           {{ "activity_name": "...", "goal": "...", "instructions": "..." }}
+        ],
+        "therapies_suggested": ["Occupational Therapy", "Speech Therapy", etc.]
+      }},
+      "risk_level_summary": "Overall Clinical Risk Level (Low/Medium/High)"
+    }}
+    
+    Final Note: Return ONLY the JSON object. No prose or conversation.
+    """
 
     headers = {
         "Authorization": f"Bearer {GROQ_API_KEY}",
@@ -45,15 +65,16 @@ diagnosis, reasons, strengths, weaknesses, therapies, school_support, risk_level
     payload = {
         "model": MODEL,
         "messages": [
-            {"role": "system", "content": "You are a medical screening assistant."},
+            {"role": "system", "content": "You are a professional medical screening assistant that only outputs JSON."},
             {"role": "user", "content": prompt}
         ],
-        "temperature": 0.2
+        "temperature": 0.1 # Kam temperature se consistency bani rehti hai
     }
 
-    response = requests.post(GROQ_URL, headers=headers, json=payload, timeout=30)
-
-    if response.status_code != 200:
-        raise Exception(response.text)
-
-    return response.json()["choices"][0]["message"]["content"]
+    try:
+        response = requests.post(GROQ_URL, headers=headers, json=payload, timeout=30)
+        response.raise_for_status()
+        return response.json()["choices"][0]["message"]["content"]
+    except Exception as e:
+        print(f"[GROQ ERROR] {e}")
+        return None

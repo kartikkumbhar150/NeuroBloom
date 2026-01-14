@@ -84,7 +84,6 @@ export function ContinuousAssessment({ studentData, onComplete }: ContinuousAsse
     },
   ];
 
-  // Enter fullscreen on mount
   useEffect(() => {
     const enterFullscreen = async () => {
       try {
@@ -97,7 +96,6 @@ export function ContinuousAssessment({ studentData, onComplete }: ContinuousAsse
     };
     enterFullscreen();
 
-    // Exit fullscreen on unmount
     return () => {
       if (document.fullscreenElement) {
         document.exitFullscreen();
@@ -109,7 +107,6 @@ export function ContinuousAssessment({ studentData, onComplete }: ContinuousAsse
     setCompletedLevels([...completedLevels, currentLevel]);
     
     if (currentLevel < 6) {
-      // Show transition to next level
       setShowTransition(true);
       setTimeout(() => {
         setCurrentLevel((currentLevel + 1) as LevelId);
@@ -117,7 +114,6 @@ export function ContinuousAssessment({ studentData, onComplete }: ContinuousAsse
         setShowTransition(false);
       }, 3000);
     } else {
-      // All levels complete
       onComplete();
     }
   };
@@ -129,11 +125,10 @@ export function ContinuousAssessment({ studentData, onComplete }: ContinuousAsse
     .reduce((sum, level) => sum + level.totalGames, 0) + currentGame;
   const overallProgress = (completedGames / totalGames) * 100;
 
-  // Level transition screen
   if (showTransition) {
     const nextLevel = levels.find(l => l.id === currentLevel + 1)!;
     return (
-      <div className={`min-h-screen bg-gradient-to-br ${nextLevel.color} flex items-center justify-center overflow-hidden`}>
+      <div className={`min-h-screen bg-gradient-to-br ${nextLevel.color} flex items-center justify-center overflow-hidden p-4`}>
         <motion.div
           initial={{ scale: 0, rotate: -180 }}
           animate={{ scale: 1, rotate: 0 }}
@@ -143,43 +138,42 @@ export function ContinuousAssessment({ studentData, onComplete }: ContinuousAsse
           <motion.div
             animate={{ rotate: 360 }}
             transition={{ duration: 2, repeat: Infinity, ease: 'linear' }}
-            className="inline-block mb-6"
+            className="inline-block mb-4"
           >
-            <Trophy className="w-32 h-32 text-yellow-400" />
+            <Trophy className="w-20 h-20 text-yellow-400" />
           </motion.div>
-          <h1 className="text-6xl font-black text-white mb-4">
+          <h1 className="text-4xl font-black text-white mb-2">
             Level Complete! 🎉
           </h1>
-          <div className="flex gap-2 justify-center mb-8">
+          <div className="flex gap-1 justify-center mb-6">
             {[...Array(5)].map((_, i) => (
               <motion.div
                 key={i}
-                initial={{ scale: 0, y: 50 }}
+                initial={{ scale: 0, y: 30 }}
                 animate={{ scale: 1, y: 0 }}
                 transition={{ delay: i * 0.1 }}
               >
-                <Star className="w-12 h-12 fill-yellow-300 text-yellow-400" />
+                <Star className="w-8 h-8 fill-yellow-300 text-yellow-400" />
               </motion.div>
             ))}
           </div>
-          <div className="bg-white/20 backdrop-blur-sm rounded-3xl p-8 max-w-md mx-auto">
-            <p className="text-2xl text-white mb-4">Get ready for...</p>
-            <div className="text-8xl mb-4">{nextLevel.icon}</div>
-            <h2 className="text-4xl font-black text-white mb-2">{nextLevel.name}</h2>
-            <p className="text-xl text-white/90">{nextLevel.theme}</p>
+          <div className="bg-white/20 backdrop-blur-sm rounded-2xl p-6 max-w-xs mx-auto">
+            <p className="text-lg text-white mb-2">Get ready for...</p>
+            <div className="text-6xl mb-2">{nextLevel.icon}</div>
+            <h2 className="text-2xl font-black text-white mb-1">{nextLevel.name}</h2>
+            <p className="text-md text-white/90">{nextLevel.theme}</p>
           </div>
         </motion.div>
         
-        {/* Floating sparkles */}
-        {[...Array(20)].map((_, i) => (
+        {[...Array(15)].map((_, i) => (
           <motion.div
             key={i}
-            initial={{ y: '100vh', x: Math.random() * window.innerWidth, opacity: 1 }}
+            initial={{ y: '100vh', x: Math.random() * 100 + 'vw', opacity: 1 }}
             animate={{ y: '-100vh', opacity: 0 }}
             transition={{ duration: 3, delay: Math.random() * 2, repeat: Infinity }}
             className="absolute"
           >
-            <Sparkles className="w-8 h-8 text-white" />
+            <Sparkles className="w-6 h-6 text-white" />
           </motion.div>
         ))}
       </div>
@@ -188,83 +182,44 @@ export function ContinuousAssessment({ studentData, onComplete }: ContinuousAsse
 
   const renderLevelContent = () => {
     switch (currentLevel) {
-      case 1:
-        return (
-          <Level1MathAdventure
-            onComplete={handleLevelComplete}
-            onProgress={(gameIndex) => setCurrentGame(gameIndex)}
-          />
-        );
-      case 2:
-        return (
-          <Level2ReadingRocket
-            onComplete={handleLevelComplete}
-            onProgress={(gameIndex) => setCurrentGame(gameIndex)}
-          />
-        );
-      case 3:
-        return (
-          <Level3WritingWizard
-            onComplete={handleLevelComplete}
-            onProgress={(gameIndex) => setCurrentGame(gameIndex)}
-          />
-        );
-      case 4:
-        return (
-          <Level4FeelingFriends
-            onComplete={handleLevelComplete}
-            onProgress={(gameIndex) => setCurrentGame(gameIndex)}
-          />
-        );
-      case 5:
-        return (
-          <Level5SuperEars
-            onComplete={handleLevelComplete}
-            onProgress={(gameIndex) => setCurrentGame(gameIndex)}
-          />
-        );
-      case 6:
-        return (
-          <Level6EagleEyes
-            onComplete={handleLevelComplete}
-            onProgress={(gameIndex) => setCurrentGame(gameIndex)}
-          />
-        );
+      case 1: return <Level1MathAdventure onComplete={handleLevelComplete} onProgress={(gameIndex) => setCurrentGame(gameIndex)} />;
+      case 2: return <Level2ReadingRocket onComplete={handleLevelComplete} onProgress={(gameIndex) => setCurrentGame(gameIndex)} />;
+      case 3: return <Level3WritingWizard onComplete={handleLevelComplete} onProgress={(gameIndex) => setCurrentGame(gameIndex)} />;
+      case 4: return <Level4FeelingFriends onComplete={handleLevelComplete} onProgress={(gameIndex) => setCurrentGame(gameIndex)} />;
+      case 5: return <Level5SuperEars onComplete={handleLevelComplete} onProgress={(gameIndex) => setCurrentGame(gameIndex)} />;
+      case 6: return <Level6EagleEyes onComplete={handleLevelComplete} onProgress={(gameIndex) => setCurrentGame(gameIndex)} />;
     }
   };
 
   return (
-    <div className={`min-h-screen bg-gradient-to-br ${selectedLevel.color} p-8`}>
-      <div className="max-w-5xl mx-auto">
-        {/* Top Header with Student Info and Progress */}
-        <div className="bg-white/95 backdrop-blur-sm rounded-3xl shadow-lg p-6 mb-6">
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-4">
-              <div className="bg-gradient-to-br from-purple-500 to-pink-500 text-white w-14 h-14 rounded-2xl flex items-center justify-center text-2xl font-black">
+    <div className={`min-h-screen bg-gradient-to-br ${selectedLevel.color} p-4 md:p-6`}>
+      <div className="max-w-4xl mx-auto">
+        {/* Top Header - Resized */}
+        <div className="bg-white/95 backdrop-blur-sm rounded-2xl shadow-lg p-4 mb-4">
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center gap-3">
+              <div className="bg-gradient-to-br from-purple-500 to-pink-500 text-white w-10 h-10 rounded-xl flex items-center justify-center text-lg font-black">
                 {studentData.name.charAt(0).toUpperCase()}
               </div>
               <div>
-                <h3 className="text-xl font-bold text-gray-800">{studentData.name}</h3>
-                <p className="text-sm text-gray-600">Age {studentData.age} • Assessment in Progress</p>
+                <h3 className="text-md font-bold text-gray-800 leading-tight">{studentData.name}</h3>
+                <p className="text-xs text-gray-600">Age {studentData.age} • Assessment</p>
               </div>
             </div>
             <div className="text-right">
-              <p className="text-sm text-gray-600">Level {currentLevel} of 6</p>
-              <p className="text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-purple-600 to-pink-600">
+              <p className="text-[10px] uppercase tracking-wider text-gray-500 font-bold">Level {currentLevel} of 6</p>
+              <p className="text-lg font-black text-transparent bg-clip-text bg-gradient-to-r from-purple-600 to-pink-600">
                 {selectedLevel.name}
               </p>
             </div>
           </div>
 
-          {/* Overall Progress Bar */}
           <div>
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-sm font-semibold text-gray-600">Overall Progress</span>
-              <span className="text-sm font-bold text-purple-600">
-                {Math.round(overallProgress)}%
-              </span>
+            <div className="flex items-center justify-between mb-1">
+              <span className="text-xs font-semibold text-gray-600">Progress</span>
+              <span className="text-xs font-bold text-purple-600">{Math.round(overallProgress)}%</span>
             </div>
-            <div className="bg-gray-200 rounded-full h-4 overflow-hidden">
+            <div className="bg-gray-200 rounded-full h-2.5 overflow-hidden">
               <motion.div
                 initial={{ width: 0 }}
                 animate={{ width: `${overallProgress}%` }}
@@ -275,16 +230,16 @@ export function ContinuousAssessment({ studentData, onComplete }: ContinuousAsse
           </div>
         </div>
 
-        {/* Current Level Progress */}
-        <div className="bg-white rounded-3xl p-4 shadow-lg mb-6">
-          <div className="flex items-center gap-4">
-            <div className="flex items-center gap-3">
-              <div className="text-4xl">{selectedLevel.icon}</div>
-              <span className="text-lg font-bold text-gray-700">
+        {/* Current Level Progress - Resized */}
+        <div className="bg-white rounded-2xl p-3 shadow-md mb-4">
+          <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2">
+              <div className="text-2xl">{selectedLevel.icon}</div>
+              <span className="text-sm font-bold text-gray-700 whitespace-nowrap">
                 Game {currentGame + 1}/{selectedLevel.totalGames}
               </span>
             </div>
-            <div className="flex-1 bg-gray-200 rounded-full h-3 overflow-hidden">
+            <div className="flex-1 bg-gray-200 rounded-full h-2 overflow-hidden">
               <motion.div
                 initial={{ width: 0 }}
                 animate={{ width: `${((currentGame) / selectedLevel.totalGames) * 100}%` }}
@@ -294,26 +249,26 @@ export function ContinuousAssessment({ studentData, onComplete }: ContinuousAsse
           </div>
         </div>
 
-        {/* Game Content */}
-        <div className="bg-white rounded-3xl shadow-2xl p-12">
+        {/* Game Content - Resized Padding */}
+        <div className="bg-white rounded-2xl shadow-xl p-6 md:p-8 min-h-[40vh]">
           {renderLevelContent()}
         </div>
 
-        {/* Level indicators at bottom */}
-        <div className="mt-6 flex justify-center gap-3">
+        {/* Level indicators - Resized icons */}
+        <div className="mt-4 flex justify-center gap-2">
           {levels.map((level) => (
             <div
               key={level.id}
-              className={`flex flex-col items-center gap-2 transition-all ${
-                level.id === currentLevel ? 'scale-110' : 'opacity-60'
+              className={`flex flex-col items-center gap-1 transition-all ${
+                level.id === currentLevel ? 'scale-105' : 'opacity-60'
               }`}
             >
               <div
-                className={`w-12 h-12 rounded-xl flex items-center justify-center text-2xl ${
+                className={`w-9 h-9 rounded-lg flex items-center justify-center text-lg ${
                   completedLevels.includes(level.id)
-                    ? 'bg-green-500'
+                    ? 'bg-green-500 text-white'
                     : level.id === currentLevel
-                    ? `bg-gradient-to-br ${level.color}`
+                    ? `bg-gradient-to-br ${level.color} text-white`
                     : 'bg-white/50'
                 }`}
               >

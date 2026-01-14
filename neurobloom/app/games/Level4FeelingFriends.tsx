@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from 'react';
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { Check, X } from 'lucide-react';
 
 interface Level4Props {
@@ -18,154 +18,166 @@ export function Level4FeelingFriends({ onComplete, onProgress }: Level4Props) {
 
   const questionStartTime = useRef<number>(Date.now());
 
-useEffect(() => {
-  questionStartTime.current = Date.now();
-}, [currentGame]);
+  useEffect(() => {
+    questionStartTime.current = Date.now();
+  }, [currentGame]);
 
-
-  const emotions: { emotion: Emotion; label: string; emoji: string ; correctIndex: number }[] = [
-    { emotion: 'happy', label: 'Happy', emoji: '😊', correctIndex: 1 },
-    { emotion: 'sad', label: 'Sad', emoji: '😢', correctIndex: 0 },
-    { emotion: 'angry', label: 'Angry', emoji: '😡', correctIndex: 2 },
-    { emotion: 'crying', label: 'Crying', emoji: '😭', correctIndex: 1 },
+  const emotions: { emotion: Emotion; label: string; correctIndex: number }[] = [
+    { emotion: 'happy', label: 'Happy', correctIndex: 1 },
+    { emotion: 'sad', label: 'Sad', correctIndex: 0 },
+    { emotion: 'angry', label: 'Angry', correctIndex: 2 },
+    { emotion: 'crying', label: 'Crying', correctIndex: 1 },
   ];
 
   const faces = {
     happy: [
-      { emoji: '😐', emotion: 'neutral' },
-      { emoji: '😊', emotion: 'happy' },
-      { emoji: '😢', emotion: 'sad' },
+      { src: '/sad.jpg', emotion: 'sad' },
+      { src: '/happy.jpg', emotion: 'happy' },
+      { src: '/angry.jpg', emotion: 'angry' },
     ],
     sad: [
-      { emoji: '😢', emotion: 'sad' },
-      { emoji: '😊', emotion: 'happy' },
-      { emoji: '😡', emotion: 'angry' },
+      { src: '/sad.jpg', emotion: 'sad' },
+      { src: '/happy.jpg', emotion: 'happy' },
+      { src: '/crying.jpg', emotion: 'crying' },
     ],
     angry: [
-      { emoji: '😊', emotion: 'happy' },
-      { emoji: '😐', emotion: 'neutral' },
-      { emoji: '😡', emotion: 'angry' },
+      { src: '/happy.jpg', emotion: 'happy' },
+      { src: '/sad.jpg', emotion: 'sad' },
+      { src: '/angry.jpg', emotion: 'angry' },
     ],
     crying: [
-      { emoji: '😊', emotion: 'happy' },
-      { emoji: '😭', emotion: 'crying' },
-      { emoji: '😐', emotion: 'neutral' },
+      { src: '/angry.jpg', emotion: 'angry' },
+      { src: '/crying.jpg', emotion: 'crying' },
+      { src: '/happy.jpg', emotion: 'happy' },
     ],
   };
 
   const currentEmotion = emotions[currentGame];
 
   const handleAnswer = async (faceIndex: number) => {
-  const isCorrect = faceIndex === currentEmotion.correctIndex;
-  const score = isCorrect ? 1 : 0;
-  const timeTaken = Math.floor((Date.now() - questionStartTime.current) / 1000);
-  const sessionId = localStorage.getItem("sessionId");
+    if (feedback !== null) return;
 
-  const payloadMap: any = {
-    0: { test4_q1: score, test4_q1_time: timeTaken },
-    1: { test4_q2: score, test4_q2_time: timeTaken },
-    2: { test4_q3: score, test4_q3_time: timeTaken },
-    3: { test4_q4: score, test4_q4_time: timeTaken },
+    const isCorrect = faceIndex === currentEmotion.correctIndex;
+    const score = isCorrect ? 1 : 0;
+    const timeTaken = Math.floor((Date.now() - questionStartTime.current) / 1000);
+    const sessionId = localStorage.getItem("sessionId");
+
+    setSelectedFace(faceIndex);
+    
+
+    const payloadMap: any = {
+      0: { test4_q1: score, test4_q1_time: timeTaken },
+      1: { test4_q2: score, test4_q2_time: timeTaken },
+      2: { test4_q3: score, test4_q3_time: timeTaken },
+      3: { test4_q4: score, test4_q4_time: timeTaken },
+    };
+
+    try {
+      await fetch("/api/session/save", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          sessionId,
+          payload: payloadMap[currentGame]
+        })
+      });
+    } catch (error) {
+      console.error("Failed to save progress:", error);
+    }
+
+    setTimeout(() => {
+      setFeedback(null);
+      setSelectedFace(null);
+
+      if (currentGame < 3) {
+        setCurrentGame(currentGame + 1);
+        onProgress(currentGame + 1);
+      } else {
+        onComplete();
+      }
+    }, 1200);
   };
 
-  await fetch("/api/session/save", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      sessionId,
-      payload: payloadMap[currentGame]
-    })
-  });
-
-  if (currentGame < 3) {
-    setCurrentGame(currentGame + 1);
-    onProgress(currentGame + 1);
-  } else {
-    onComplete();
-  }
-};
-
-
   return (
-    <div className="text-center max-w-4xl mx-auto">
-      <h2 className="text-4xl font-black text-orange-600 mb-8">
-        😊 Feeling Friends! 😊
+    <div className="text-center max-w-2xl mx-auto px-4 py-2">
+      <h2 className="text-2xl font-black text-orange-600 mb-4 uppercase tracking-tight">
+        Feeling Friends!
       </h2>
 
-      <motion.div
-        animate={{ scale: [1, 1.1, 1] }}
-        transition={{ duration: 1.5, repeat: Infinity }}
-        className="text-8xl mb-8"
-      >
-        {currentEmotion.emoji || '🌈'}
-      </motion.div>
-
-      <div className="bg-gradient-to-br from-yellow-100 to-orange-100 p-12 rounded-3xl shadow-2xl mb-12">
-        <p className="text-4xl font-black text-orange-700 mb-6">
-          Find the {currentEmotion.label} face!
-        </p>
-        <p className="text-2xl text-orange-600">
-          Tap the face that shows {currentEmotion.label.toLowerCase()} emotion
+      <div className="bg-gradient-to-br from-yellow-100 to-orange-100 p-4 rounded-2xl shadow-md mb-6 border-b-4 border-orange-200">
+        <p className="text-2xl font-black text-orange-700">
+          Find the <span className="underline decoration-orange-400">{currentEmotion.label}</span> face!
         </p>
       </div>
 
-      <div className="grid grid-cols-3 gap-8 max-w-3xl mx-auto">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 max-w-3xl mx-auto">
         {faces[currentEmotion.emotion].map((face, index) => (
           <motion.button
-            key={index}
-            whileHover={{ scale: feedback === null ? 1.1 : 1 }}
-            whileTap={{ scale: feedback === null ? 0.9 : 1 }}
+            key={`${currentGame}-${index}`}
+            whileHover={{ scale: feedback === null ? 1.03 : 1 }}
+            whileTap={{ scale: feedback === null ? 0.98 : 1 }}
             onClick={() => handleAnswer(index)}
             disabled={feedback !== null}
-            className={`relative bg-white p-12 rounded-3xl shadow-2xl transition-all ${
+            className={`relative overflow-hidden bg-white rounded-2xl shadow-lg transition-all border-4 ${
               selectedFace === index
                 ? feedback === 'correct'
-                  ? 'ring-8 ring-green-500 bg-green-50'
-                  : 'ring-8 ring-red-500 bg-red-50'
-                : 'hover:shadow-3xl'
+                  ? 'border-green-500'
+                  : 'border-red-500'
+                : 'border-transparent hover:border-orange-200'
             }`}
           >
-            <div className="text-8xl mb-4">{face.emoji}</div>
+            <img 
+              src={face.src} 
+              alt={face.emotion} 
+              className="w-full h-40 md:h-44 object-cover"
+            />
             
-            {selectedFace === index && feedback && (
-              <motion.div
-                initial={{ scale: 0 }}
-                animate={{ scale: 1 }}
-                className="absolute top-4 right-4"
-              >
-                {feedback === 'correct' ? (
-                  <Check className="w-12 h-12 text-green-600" />
-                ) : (
-                  <X className="w-12 h-12 text-red-600" />
-                )}
-              </motion.div>
-            )}
+            <AnimatePresence>
+              {selectedFace === index && feedback && (
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  className="absolute inset-0 flex items-center justify-center bg-white/10 backdrop-blur-[2px]"
+                >
+                  {feedback === 'correct' ? (
+                    <div className="bg-green-500 rounded-full p-2">
+                      <Check className="w-10 h-10 text-white" strokeWidth={5} />
+                    </div>
+                  ) : (
+                    <div className="bg-red-500 rounded-full p-2">
+                      <X className="w-10 h-10 text-white" strokeWidth={5} />
+                    </div>
+                  )}
+                </motion.div>
+              )}
+            </AnimatePresence>
           </motion.button>
         ))}
       </div>
 
-      {/* Progress indicator */}
-      <div className="mt-12 flex justify-center gap-3">
+      {/* Progress indicator - Scaled down */}
+      <div className="mt-8 flex justify-center gap-3">
         {emotions.map((_, index) => (
           <div
             key={index}
-            className={`w-4 h-4 rounded-full ${
+            className={`w-3 h-3 rounded-full transition-all duration-300 ${
               index < currentGame
                 ? 'bg-green-500'
                 : index === currentGame
-                ? 'bg-orange-500'
+                ? 'bg-orange-500 ring-2 ring-orange-200'
                 : 'bg-gray-300'
             }`}
           />
         ))}
       </div>
 
-      {/* Floating hearts */}
+      {/* Background Hearts - Reduced size and count for zoom clarity */}
       <div className="fixed inset-0 pointer-events-none overflow-hidden" style={{ zIndex: -1 }}>
-        {[...Array(10)].map((_, i) => (
+        {[...Array(6)].map((_, i) => (
           <motion.div
             key={i}
-            className="absolute text-5xl"
+            className="absolute text-3xl opacity-30"
             style={{
               top: `${Math.random() * 100}%`,
               left: `${Math.random() * 100}%`,
@@ -173,39 +185,17 @@ useEffect(() => {
             animate={{
               y: [0, -20, 0],
               rotate: [0, 10, -10, 0],
-              scale: [1, 1.2, 1],
             }}
             transition={{
-              duration: 3 + Math.random() * 2,
+              duration: 5,
               repeat: Infinity,
-              delay: Math.random() * 2,
+              ease: "easeInOut"
             }}
           >
-            {['💛', '💙', '💚', '💜', '❤️'][Math.floor(Math.random() * 5)]}
+            {['💛', '💙', '💚', '❤️'][i % 4]}
           </motion.div>
         ))}
       </div>
-
-      {/* Feedback animation */}
-      {feedback && (
-        <motion.div
-          initial={{ scale: 0 }}
-          animate={{ scale: 1 }}
-          className="fixed inset-0 flex items-center justify-center pointer-events-none z-50"
-        >
-          <div
-            className={`text-9xl ${
-              feedback === 'correct' ? 'text-green-500' : 'text-red-500'
-            }`}
-          >
-            {feedback === 'correct' ? (
-              <Check className="w-48 h-48" />
-            ) : (
-              <X className="w-48 h-48" />
-            )}
-          </div>
-        </motion.div>
-      )}
     </div>
   );
 }

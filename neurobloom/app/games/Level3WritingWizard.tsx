@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { motion } from "framer-motion";
-import { Upload, Check, Loader2, Sparkles } from 'lucide-react';
+import { Upload, Check, Loader2 } from 'lucide-react';
 
 interface Level3Props {
   onComplete: () => void;
@@ -17,44 +17,33 @@ export function Level3WritingWizard({ onComplete, onProgress }: Level3Props) {
     const file = event.target.files?.[0];
     if (!file) return;
 
-    // 1. UI par turant preview dikhane ke liye
     const reader = new FileReader();
     reader.onload = (e) => {
       setUploadedImage(e.target?.result as string);
     };
     reader.readAsDataURL(file);
 
-    // 2. Uploading process start
     setIsUploading(true);
 
     try {
       const formData = new FormData();
       formData.append("file", file);
 
-      // 3. Cloudinary API Route ko call karna
       const res = await fetch("/api/upload", {
         method: "POST",
         body: formData,
       });
 
       const data = await res.json();
-      
-      if (!data.url) {
-        throw new Error(data.error || "Upload failed");
-      }
+      if (!data.url) throw new Error(data.error || "Upload failed");
 
-      console.log("Cloudinary Image URL:", data.url);
-
-      // 4. PostgreSQL Session mein URL save karna
       const sessionId = localStorage.getItem("sessionId");
       await fetch("/api/session/save", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           sessionId,
-          payload: {
-            test3_image: data.url
-          }
+          payload: { test3_image: data.url }
         })
       });
 
@@ -68,34 +57,39 @@ export function Level3WritingWizard({ onComplete, onProgress }: Level3Props) {
   };
 
   const handleSubmit = () => {
+    // Ensure the UI scrolls back to top if zoomed/scrolled before completing
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    
     onProgress(1);
+    
+    // Slight delay to allow the "Success" state to be seen before transition
     setTimeout(() => {
       onComplete();
-    }, 1000);
+    }, 800);
   };
 
   return (
-    <div className="text-center max-w-4xl mx-auto px-4">
-      <h2 className="text-4xl font-black text-purple-700 mb-8">
+    <div className="text-center max-w-2xl mx-auto px-4 py-2 min-h-[60vh] flex flex-col justify-center">
+      <h2 className="text-3xl font-black text-purple-700 mb-4">
         ✨ Writing Wizard Challenge! ✨
       </h2>
       
       <motion.div
         animate={{ rotate: [0, 10, -10, 0] }}
         transition={{ duration: 3, repeat: Infinity }}
-        className="text-8xl mb-8"
+        className="text-6xl mb-4"
       >
         🧙‍♂️
       </motion.div>
 
-      <div className="bg-gradient-to-br from-purple-100 to-pink-100 p-12 rounded-3xl shadow-2xl mb-8 border-4 border-purple-300">
-        <div className="bg-white p-8 rounded-2xl shadow-inner mb-6">
-          <p className="text-3xl text-gray-800 leading-relaxed font-medium">
-            ☀️ The sun is bright and warm.
+      <div className="bg-gradient-to-br from-purple-100 to-pink-100 p-6 rounded-3xl shadow-xl mb-6 border-2 border-purple-300">
+        <div className="bg-white p-4 rounded-xl shadow-inner mb-4">
+          <p className="text-xl text-gray-800 leading-tight font-medium italic">
+            "I jump like a frog and run like the wind, I laugh with my friends and always grin."
           </p>
         </div>
-        <p className="text-2xl text-purple-700 font-bold">
-          Write this sentence on paper, then upload a photo! 📝
+        <p className="text-lg text-purple-700 font-bold">
+          Write this on paper, then upload a photo! 📝
         </p>
       </div>
 
@@ -108,16 +102,16 @@ export function Level3WritingWizard({ onComplete, onProgress }: Level3Props) {
             <motion.div
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
-              className="bg-gradient-to-r from-purple-500 to-pink-500 text-white px-16 py-12 rounded-full shadow-2xl"
+              className="bg-gradient-to-r from-purple-500 to-pink-500 text-white px-10 py-5 rounded-full shadow-xl"
             >
-              <div className="flex items-center gap-4">
+              <div className="flex items-center gap-3">
                 {isUploading ? (
-                  <Loader2 className="w-12 h-12 animate-spin" />
+                  <Loader2 className="w-8 h-8 animate-spin" />
                 ) : (
-                  <Upload className="w-12 h-12" />
+                  <Upload className="w-8 h-8" />
                 )}
-                <span className="text-3xl font-black">
-                  {isUploading ? "Uploading..." : "Upload Your Writing"}
+                <span className="text-xl font-black uppercase">
+                  {isUploading ? "Uploading..." : "Upload Photo"}
                 </span>
               </div>
             </motion.div>
@@ -130,60 +124,43 @@ export function Level3WritingWizard({ onComplete, onProgress }: Level3Props) {
             className="hidden"
             disabled={isUploading}
           />
-          
-          <p className="text-gray-600 mt-6 text-lg font-semibold">
+          <p className="text-gray-500 mt-4 text-sm font-semibold">
             📸 Take a clear photo of your handwriting!
           </p>
         </div>
       ) : (
         <motion.div 
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="space-y-6"
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="space-y-4"
         >
-          <div className="bg-gradient-to-br from-green-100 to-teal-100 p-6 rounded-3xl shadow-lg border-4 border-green-200">
-            <div className="flex items-center justify-center gap-3 mb-4">
-              <Check className="w-8 h-8 text-green-600" />
-              <p className="text-2xl font-bold text-green-700">
-                {isUploading ? "Magical processing..." : "Ready to Fly! 🎉"}
-              </p>
+          <div className="bg-gradient-to-br from-green-100 to-teal-100 p-4 rounded-2xl shadow-md border-2 border-green-200">
+            <div className="flex items-center justify-center gap-2 mb-2">
+              <Check className="w-6 h-6 text-green-600" />
+              <p className="text-lg font-bold text-green-700">Ready to Submit! 🎉</p>
             </div>
-            <div className="bg-white p-4 rounded-2xl shadow-inner overflow-hidden relative">
-              {isUploading && (
-                 <div className="absolute inset-0 bg-white/60 flex items-center justify-center z-10">
-                    <Loader2 className="w-12 h-12 animate-spin text-purple-600" />
-                 </div>
-              )}
+            <div className="bg-white p-2 rounded-xl shadow-inner overflow-hidden relative inline-block">
               <img
                 src={uploadedImage}
-                alt="Uploaded writing"
-                className="max-h-64 mx-auto rounded-lg shadow-md"
+                alt="Uploaded preview"
+                className="max-h-40 mx-auto rounded-lg shadow-sm"
               />
             </div>
           </div>
 
-          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+          <div className="flex flex-col gap-3 justify-center items-center">
             <motion.button
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
               onClick={handleSubmit}
               disabled={isUploading}
-              className="bg-gradient-to-r from-green-500 to-emerald-500 text-white text-3xl font-black px-16 py-12 rounded-full shadow-2xl disabled:opacity-50"
+              className="bg-gradient-to-r from-green-500 to-emerald-500 text-white text-2xl font-black px-12 py-5 rounded-full shadow-xl disabled:opacity-50"
             >
-              Submit My Work! ✨
+              Submit Work ✨
             </motion.button>
 
-            <label
-              htmlFor="file-upload-replace"
-              className="cursor-pointer"
-            >
-              <motion.div
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                className="bg-gray-200 text-gray-600 text-xl font-bold px-8 py-10 rounded-full shadow-lg border-2 border-gray-300"
-              >
-                Upload Different Photo
-              </motion.div>
+            <label htmlFor="file-upload-replace" className="cursor-pointer">
+              <span className="text-gray-500 text-sm font-bold underline">Try a different photo</span>
             </label>
             <input
               id="file-upload-replace"
@@ -197,26 +174,18 @@ export function Level3WritingWizard({ onComplete, onProgress }: Level3Props) {
         </motion.div>
       )}
 
-      {/* Magical sparkles background animation */}
+      {/* Background Decor */}
       <div className="fixed inset-0 pointer-events-none overflow-hidden" style={{ zIndex: -1 }}>
-        {[...Array(15)].map((_, i) => (
+        {[...Array(8)].map((_, i) => (
           <motion.div
             key={i}
-            className="absolute text-purple-300 text-4xl"
+            className="absolute text-purple-200 text-2xl"
             style={{
               top: `${Math.random() * 100}%`,
               left: `${Math.random() * 100}%`,
             }}
-            animate={{
-              y: [0, -40, 0],
-              opacity: [0.2, 0.8, 0.2],
-              scale: [1, 1.4, 1],
-            }}
-            transition={{
-              duration: 3 + Math.random() * 2,
-              repeat: Infinity,
-              delay: Math.random() * 2,
-            }}
+            animate={{ y: [0, -20, 0], opacity: [0.1, 0.4, 0.1] }}
+            transition={{ duration: 4, repeat: Infinity, delay: i }}
           >
             ✨
           </motion.div>

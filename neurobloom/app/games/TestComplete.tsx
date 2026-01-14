@@ -3,9 +3,8 @@
 import { motion } from "framer-motion";
 import { Trophy, Star, Download, Home, Sparkles } from 'lucide-react';
 import { StudentData } from './StudentForm';
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useVideo } from "@/context/VideoContext";
-
 
 interface TestCompleteProps {
   studentData: StudentData;
@@ -14,228 +13,166 @@ interface TestCompleteProps {
 
 export function TestComplete({ studentData, onReturnHome }: TestCompleteProps) {
   const { stopAndUpload } = useVideo();
+  const [windowSize, setWindowSize] = useState({ width: 1200, height: 800 });
 
   useEffect(() => {
-  const stop = async () => {
-    await stopAndUpload();
-  };
-  stop();
-}, []);
+    const stop = async () => {
+      await stopAndUpload();
+    };
+    stop();
 
-
-  
+    // Set initial window size and update on resize
+    setWindowSize({ width: window.innerWidth, height: window.innerHeight });
+    const handleResize = () => setWindowSize({ width: window.innerWidth, height: window.innerHeight });
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, [stopAndUpload]);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-600 via-pink-500 to-orange-400 flex items-center justify-center overflow-hidden p-8">
-      <div className="max-w-4xl w-full">
+    <div className="min-h-screen bg-gradient-to-br from-purple-600 via-pink-500 to-orange-400 flex items-center justify-center overflow-x-hidden p-4">
+      {/* Container restricted to a smaller max-width for better "fit" */}
+      <div className="max-w-3xl w-full py-4">
         <motion.div
-          initial={{ scale: 0, rotate: -180 }}
-          animate={{ scale: 1, rotate: 0 }}
-          transition={{ type: 'spring', duration: 1 }}
+          initial={{ scale: 0.9, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          transition={{ type: 'spring', duration: 0.8 }}
           className="text-center"
         >
-          {/* Trophy Animation */}
+          {/* Trophy Animation - Scaled Down */}
           <motion.div
             animate={{ 
-              rotate: [0, 10, -10, 10, 0],
-              y: [0, -20, 0]
+              rotate: [0, 5, -5, 5, 0],
+              y: [0, -10, 0]
             }}
-            transition={{ duration: 2, repeat: Infinity }}
-            className="inline-block mb-8"
+            transition={{ duration: 3, repeat: Infinity }}
+            className="inline-block mb-4"
           >
             <div className="relative">
-              <Trophy className="w-48 h-48 text-yellow-300" />
+              <Trophy className="w-28 h-28 text-yellow-300" />
               <motion.div
-                animate={{ scale: [1, 1.2, 1], rotate: 360 }}
-                transition={{ duration: 2, repeat: Infinity }}
-                className="absolute -top-4 -right-4"
+                animate={{ scale: [1, 1.1, 1], rotate: 360 }}
+                transition={{ duration: 4, repeat: Infinity }}
+                className="absolute -top-2 -right-2"
               >
-                <Star className="w-20 h-20 fill-yellow-200 text-yellow-300" />
+                <Star className="w-12 h-12 fill-yellow-200 text-yellow-300" />
               </motion.div>
             </div>
           </motion.div>
 
-          {/* Completion Message */}
+          {/* Completion Message - Reduced Font Sizes */}
           <motion.h1
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3 }}
-            className="text-7xl font-black text-white mb-6"
+            transition={{ delay: 0.2 }}
+            className="text-4xl md:text-5xl font-black text-white mb-3"
           >
-            🎉 Amazing Job, {studentData.name}! 🎉
+            🎉 Amazing, {studentData.name}! 🎉
           </motion.h1>
 
           <motion.p
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.5 }}
-            className="text-3xl text-white/90 mb-12"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.4 }}
+            className="text-xl text-white/90 mb-8"
           >
-            You've completed all 6 levels of the Learning Adventure!
+            Adventure Complete! You've finished all 6 levels.
           </motion.p>
 
-          {/* Stats Cards */}
+          {/* Stats Cards - Compact Padding */}
           <motion.div
-            initial={{ opacity: 0, y: 30 }}
+            initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.7 }}
-            className="grid grid-cols-3 gap-6 mb-12"
+            transition={{ delay: 0.6 }}
+            className="grid grid-cols-3 gap-4 mb-8"
           >
-            <div className="bg-white/20 backdrop-blur-lg rounded-3xl p-8 border-2 border-white/30">
-              <div className="text-6xl mb-4">🎯</div>
-              <h3 className="text-4xl font-black text-white mb-2">6/6</h3>
-              <p className="text-white/80 text-lg">Levels Complete</p>
-            </div>
-
-            <div className="bg-white/20 backdrop-blur-lg rounded-3xl p-8 border-2 border-white/30">
-              <div className="text-6xl mb-4">⭐</div>
-              <h3 className="text-4xl font-black text-white mb-2">20+</h3>
-              <p className="text-white/80 text-lg">Games Played</p>
-            </div>
-
-            <div className="bg-white/20 backdrop-blur-lg rounded-3xl p-8 border-2 border-white/30">
-              <div className="text-6xl mb-4">🏆</div>
-              <h3 className="text-4xl font-black text-white mb-2">100%</h3>
-              <p className="text-white/80 text-lg">Participation</p>
-            </div>
+            {[
+              { icon: '🎯', stat: '6/6', label: 'Levels' },
+              { icon: '⭐', stat: '20+', label: 'Games' },
+              { icon: '🏆', stat: '100%', label: 'Done' },
+            ].map((item, i) => (
+              <div key={i} className="bg-white/20 backdrop-blur-md rounded-2xl p-4 border border-white/30">
+                <div className="text-3xl mb-1">{item.icon}</div>
+                <h3 className="text-2xl font-black text-white">{item.stat}</h3>
+                <p className="text-white/70 text-sm">{item.label}</p>
+              </div>
+            ))}
           </motion.div>
 
-          {/* Achievement Badges */}
+          {/* Achievement Badges - Smaller Grid */}
           <motion.div
-            initial={{ opacity: 0, y: 30 }}
+            initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.9 }}
-            className="bg-white/10 backdrop-blur-lg rounded-3xl p-10 mb-12 border-2 border-white/20"
+            transition={{ delay: 0.8 }}
+            className="bg-white/10 backdrop-blur-md rounded-2xl p-6 mb-8 border border-white/20"
           >
-            <h2 className="text-3xl font-black text-white mb-6">Achievements Unlocked! 🌟</h2>
-            <div className="grid grid-cols-6 gap-4">
+            <h2 className="text-xl font-black text-white mb-4">Achievements Unlocked! 🌟</h2>
+            <div className="grid grid-cols-6 gap-3">
               {[
-                { icon: '🌳', name: 'Math Master' },
-                { icon: '🚀', name: 'Reading Star' },
-                { icon: '✨', name: 'Writing Wizard' },
-                { icon: '😊', name: 'Emotion Expert' },
-                { icon: '🔊', name: 'Sound Sleuth' },
-                { icon: '👀', name: 'Vision Champion' },
+                { icon: '🌳', name: 'Math' },
+                { icon: '🚀', name: 'Reading' },
+                { icon: '✨', name: 'Writing' },
+                { icon: '😊', name: 'Emotion' },
+                { icon: '🔊', name: 'Sound' },
+                { icon: '👀', name: 'Vision' },
               ].map((badge, index) => (
                 <motion.div
                   key={index}
-                  initial={{ scale: 0, rotate: -180 }}
-                  animate={{ scale: 1, rotate: 0 }}
-                  transition={{ delay: 1.1 + index * 0.1, type: 'spring' }}
-                  className="bg-white/20 rounded-2xl p-4 hover:bg-white/30 transition-all"
+                  whileHover={{ scale: 1.1 }}
+                  className="bg-white/20 rounded-xl p-2"
                 >
-                  <div className="text-5xl mb-2">{badge.icon}</div>
-                  <p className="text-white text-sm font-bold">{badge.name}</p>
+                  <div className="text-3xl mb-1">{badge.icon}</div>
+                  <p className="text-white text-[10px] font-bold truncate">{badge.name}</p>
                 </motion.div>
               ))}
             </div>
           </motion.div>
 
-          {/* Next Steps Message */}
+          {/* Next Steps - Smaller text */}
           <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 1.3 }}
-            className="bg-gradient-to-r from-indigo-500/30 to-purple-500/30 backdrop-blur-lg rounded-3xl p-8 mb-8 border-2 border-white/30"
+            className="bg-indigo-500/20 backdrop-blur-md rounded-2xl p-5 mb-8 border border-white/20"
           >
-            <h3 className="text-2xl font-bold text-white mb-3">📊 What's Next?</h3>
-            <p className="text-white/90 text-lg leading-relaxed">
-              Your assessment results are being processed by our AI system. 
-              A detailed report with insights and recommendations will be available 
-              in your dashboard shortly. Great job on completing this learning journey!
+            <p className="text-white/90 text-sm leading-relaxed">
+              Your results are being processed. A detailed AI report will be in your dashboard soon!
             </p>
           </motion.div>
 
-          {/* Action Buttons */}
+          {/* Action Buttons - Smaller padding and font */}
           <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 1.5 }}
-            className="flex gap-6 justify-center"
+            className="flex flex-col sm:flex-row gap-4 justify-center"
           >
             <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
               onClick={onReturnHome}
-              className="bg-white text-purple-600 text-2xl font-black px-12 py-6 rounded-2xl shadow-2xl hover:shadow-3xl transition-all flex items-center gap-3"
+              className="bg-white text-purple-600 text-lg font-black px-8 py-3 rounded-xl shadow-xl flex items-center justify-center gap-2"
             >
-              <Home className="w-8 h-8" />
-              Return to Dashboard
+              <Home className="w-5 h-5" />
+              Return Home
             </motion.button>
 
             <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              className="bg-white/20 backdrop-blur-sm border-2 border-white text-white text-2xl font-black px-12 py-6 rounded-2xl hover:bg-white/30 transition-all flex items-center gap-3"
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              className="bg-white/20 backdrop-blur-sm border border-white text-white text-lg font-black px-8 py-3 rounded-xl flex items-center justify-center gap-2"
             >
-              <Download className="w-8 h-8" />
-              Download Certificate
+              <Download className="w-5 h-5" />
+              Certificate
             </motion.button>
           </motion.div>
         </motion.div>
       </div>
 
-      {/* Floating celebration elements */}
-      {[...Array(30)].map((_, i) => (
+      {/* Confetti and Sparkles - Use windowSize state for better positioning */}
+      {[...Array(20)].map((_, i) => (
         <motion.div
           key={i}
-          initial={{ 
-            y: '100vh', 
-            x: Math.random() * window.innerWidth,
-            rotate: Math.random() * 360,
-            opacity: 1 
-          }}
-          animate={{ 
-            y: '-100vh', 
-            rotate: Math.random() * 360 + 360,
-            opacity: 0 
-          }}
-          transition={{ 
-            duration: 3 + Math.random() * 2, 
-            delay: Math.random() * 3, 
-            repeat: Infinity 
-          }}
-          className="absolute pointer-events-none"
+          initial={{ y: '110vh', x: Math.random() * windowSize.width }}
+          animate={{ y: '-10vh' }}
+          transition={{ duration: 4 + Math.random() * 2, repeat: Infinity, delay: Math.random() * 5 }}
+          className="absolute pointer-events-none opacity-40"
         >
-          {i % 3 === 0 ? (
-            <Sparkles className="w-8 h-8 text-yellow-200" />
-          ) : i % 3 === 1 ? (
-            <Star className="w-6 h-6 fill-yellow-300 text-yellow-200" />
-          ) : (
-            <div className="text-4xl">
-              {['🎉', '🎊', '⭐', '🌟', '✨', '🏆'][Math.floor(Math.random() * 6)]}
-            </div>
-          )}
+          <Sparkles className="text-yellow-200 w-4 h-4" />
         </motion.div>
-      ))}
-
-      {/* Confetti burst effect */}
-      {[...Array(50)].map((_, i) => (
-        <motion.div
-          key={`confetti-${i}`}
-          initial={{ 
-            y: '50vh',
-            x: '50vw',
-            scale: 0,
-            opacity: 1
-          }}
-          animate={{ 
-            y: Math.random() * window.innerHeight,
-            x: Math.random() * window.innerWidth,
-            scale: 1,
-            opacity: 0,
-            rotate: Math.random() * 720
-          }}
-          transition={{ 
-            duration: 2,
-            delay: i * 0.02,
-            ease: 'easeOut'
-          }}
-          className="absolute w-3 h-3 rounded-full"
-          style={{
-            backgroundColor: ['#fbbf24', '#f59e0b', '#ec4899', '#8b5cf6', '#06b6d4', '#10b981'][i % 6]
-          }}
-        />
       ))}
     </div>
   );

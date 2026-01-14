@@ -4,7 +4,6 @@ import { useState } from 'react';
 import { motion } from "framer-motion";
 import { Mic, Check, Square } from 'lucide-react';
 import { useRef, useEffect } from "react";
-import { set } from 'react-hook-form';
 
 
 interface Level2Props {
@@ -20,83 +19,77 @@ export function Level2ReadingRocket({ onComplete, onProgress }: Level2Props) {
 
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunks = useRef<Blob[]>([]);
-  const recordStartTime = useRef<number>(0);
-
 
   const startRecording = async () => {
-  if (isRecording) return;
+    if (isRecording) return;
 
-  const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-  const mediaRecorder = new MediaRecorder(stream, { mimeType: "audio/webm" });
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const mediaRecorder = new MediaRecorder(stream, { mimeType: "audio/webm" });
 
-  mediaRecorderRef.current = mediaRecorder;
-  audioChunks.current = [];
+      mediaRecorderRef.current = mediaRecorder;
+      audioChunks.current = [];
 
-  mediaRecorder.ondataavailable = (e) => {
-    if (e.data.size > 0) audioChunks.current.push(e.data);
+      mediaRecorder.ondataavailable = (e) => {
+        if (e.data.size > 0) audioChunks.current.push(e.data);
+      };
+
+      mediaRecorder.onstop = async () => {
+        setIsSaving(true);
+        const audioBlob = new Blob(audioChunks.current, { type: "audio/webm" });
+
+        const formData = new FormData();
+        formData.append("file", audioBlob, "reading.webm");
+
+        try {
+          const upload = await fetch("/api/upload", {
+            method: "POST",
+            body: formData
+          });
+
+          const uploadRes = await upload.json();
+          const url = uploadRes.url;
+
+          if (!url) {
+            console.error("Upload failed:", uploadRes.error);
+            setIsSaving(false);
+            setIsRecording(false);
+            return;
+          }
+
+          const sessionId = localStorage.getItem("sessionId");
+          await fetch("/api/session/save", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              sessionId,
+              payload: currentGame === 0 
+                ? { test2_audio1: url } 
+                : { test2_audio2: url }
+            })
+          });
+
+          setHasRecorded(true);
+        } catch (error) {
+          console.error("Process failed:", error);
+        } finally {
+          mediaRecorderRef.current?.stream.getTracks().forEach(t => t.stop());
+          setIsRecording(false);
+          setIsSaving(false);
+        }
+      };
+
+      mediaRecorder.start();
+      setIsRecording(true);
+    } catch (err) {
+      console.error("Error accessing microphone:", err);
+    }
   };
 
-  mediaRecorder.onstop = async () => {
-  setIsSaving(true);
-  const audioBlob = new Blob(audioChunks.current, { type: "audio/webm" });
-
-  const formData = new FormData();
-  formData.append("file", audioBlob, "reading.webm");
-
-  try {
-    // Step 1: Upload to Cloudinary via our API
-    const upload = await fetch("/api/upload", {
-      method: "POST",
-      body: formData
-    });
-
-    const uploadRes = await upload.json();
-    const url = uploadRes.url; 
-
-    if (!url) {
-      console.error("Upload failed:", uploadRes.error);
-      setIsSaving(false);
-      setIsRecording(false);
-      return;
-    }
-
-    // Step 2: Save the Cloudinary URL to your existing PostgreSQL DB
-    const sessionId = localStorage.getItem("sessionId");
-    await fetch("/api/session/save", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        sessionId,
-        payload: currentGame === 0 
-          ? { test2_audio1: url } 
-          : { test2_audio2: url }
-      })
-    });
-
-    setHasRecorded(true);
-
-  } catch (error) {
-    console.error("Process failed:", error);
-  } finally {
-    mediaRecorderRef.current?.stream.getTracks().forEach(t => t.stop());
-    setIsRecording(false);
-    setIsSaving(false);
-  }
-};
-
-  mediaRecorder.start();
-  setIsRecording(true);
-
-
-};
   const finishRecording = () => {
-  if (!mediaRecorderRef.current) return;
-
-  mediaRecorderRef.current.stop(); // sirf stop karo, stream ko yahan mat chhedo
-};
-
-
-
+    if (!mediaRecorderRef.current) return;
+    mediaRecorderRef.current.stop();
+  };
 
   const handleNext = () => {
     if (currentGame < 1) {
@@ -110,30 +103,27 @@ export function Level2ReadingRocket({ onComplete, onProgress }: Level2Props) {
 
   const games = [
     // Reading 1
-    <div key="reading1" className="text-center max-w-4xl mx-auto">
-      <h2 className="text-4xl font-black text-blue-700 mb-8">
+    <div key="reading1" className="text-center max-w-2xl mx-auto px-4">
+      <h2 className="text-3xl font-black text-blue-700 mb-4">
         🚀 Reading Mission 1 🚀
       </h2>
       
       <motion.div
-        animate={{ y: [0, -10, 0] }}
+        animate={{ y: [0, -8, 0] }}
         transition={{ duration: 2, repeat: Infinity }}
-        className="text-8xl mb-8"
+        className="text-6xl mb-4"
       >
         🚀
       </motion.div>
 
-      <div className="bg-white p-12 rounded-3xl shadow-2xl mb-8 border-4 border-blue-200">
-        <p className="text-4xl leading-relaxed text-gray-800 text-left space-y-4">
-          <span className="block">🐕 Dogs eat bones.</span>
-          <span className="block">🚴 Mike likes bikes.</span>
-          <span className="block">📚 Elsa wants a book.</span>
-          <span className="block">🏀 Adam plays basketball.</span>
+      <div className="bg-white p-6 rounded-3xl shadow-xl mb-6 border-2 border-blue-200">
+        <p className="text-2xl leading-snug text-gray-800 text-left">
+          Dogs eat bones. Mike likes bikes. Elsa wants a book. Adam plays basketball.
         </p>
       </div>
 
-      <p className="text-2xl text-blue-600 mb-8">
-        {!hasRecorded ? '👆 Read the sentences above, then press the microphone!' : '✅ Great job! Ready for the next one?'}
+      <p className="text-lg font-medium text-blue-600 mb-6">
+        {!hasRecorded ? '👆 Read clearly, then press the mic!' : '✅ Great job! Ready for Mission 2?'}
       </p>
 
       {!hasRecorded ? (
@@ -146,29 +136,29 @@ export function Level2ReadingRocket({ onComplete, onProgress }: Level2Props) {
             isRecording
               ? 'bg-red-500'
               : 'bg-gradient-to-r from-blue-500 to-indigo-500'
-          } text-white px-16 py-12 rounded-full shadow-2xl transition-all`}
+          } text-white px-10 py-6 rounded-full shadow-xl transition-all`}
         >
           {isRecording ? (
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-3">
               <motion.div
                 animate={{ scale: [1, 1.2, 1] }}
                 transition={{ duration: 0.5, repeat: Infinity }}
               >
-                <Square className="w-12 h-12 fill-white" />
+                <Square className="w-8 h-8 fill-white" />
               </motion.div>
-              <span className="text-3xl font-black">Recording...</span>
+              <span className="text-xl font-black uppercase tracking-wide">Stop</span>
             </div>
           ) : (
-            <div className="flex items-center gap-4">
-              <Mic className="w-12 h-12" />
-              <span className="text-3xl font-black">Start Reading</span>
+            <div className="flex items-center gap-3">
+              <Mic className="w-8 h-8" />
+              <span className="text-xl font-black uppercase tracking-wide">Start Reading</span>
             </div>
           )}
 
           {isRecording && (
             <motion.div
-              className="absolute inset-0 border-4 border-white rounded-full"
-              animate={{ scale: [1, 1.2, 1], opacity: [0.7, 0, 0.7] }}
+              className="absolute inset-0 border-2 border-white rounded-full"
+              animate={{ scale: [1, 1.15, 1], opacity: [0.7, 0, 0.7] }}
               transition={{ duration: 1, repeat: Infinity }}
             />
           )}
@@ -180,7 +170,7 @@ export function Level2ReadingRocket({ onComplete, onProgress }: Level2Props) {
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
           onClick={handleNext}
-          className="bg-gradient-to-r from-green-500 to-emerald-500 text-white text-3xl font-black px-16 py-12 rounded-full shadow-2xl"
+          className="bg-gradient-to-r from-green-500 to-emerald-500 text-white text-xl font-black px-10 py-6 rounded-full shadow-xl"
         >
           Next Mission →
         </motion.button>
@@ -188,27 +178,27 @@ export function Level2ReadingRocket({ onComplete, onProgress }: Level2Props) {
     </div>,
 
     // Reading 2
-    <div key="reading2" className="text-center max-w-4xl mx-auto">
-      <h2 className="text-4xl font-black text-blue-700 mb-8">
+    <div key="reading2" className="text-center max-w-2xl mx-auto px-4">
+      <h2 className="text-3xl font-black text-blue-700 mb-4">
         🚀 Reading Mission 2 🚀
       </h2>
       
       <motion.div
         animate={{ rotate: [0, 360] }}
         transition={{ duration: 20, repeat: Infinity, ease: 'linear' }}
-        className="text-8xl mb-8"
+        className="text-6xl mb-4"
       >
         🌍
       </motion.div>
 
-      <div className="bg-gradient-to-br from-green-50 to-blue-50 p-12 rounded-3xl shadow-2xl mb-8 border-4 border-green-200">
-        <p className="text-4xl leading-relaxed text-gray-800">
+      <div className="bg-gradient-to-br from-green-50 to-blue-50 p-6 rounded-3xl shadow-xl mb-6 border-2 border-green-200">
+        <p className="text-2xl leading-snug text-gray-800">
           🌿 Nature gives us fruits, vegetables and grains to eat.
         </p>
       </div>
 
-      <p className="text-2xl text-blue-600 mb-8">
-        {!hasRecorded ? '👆 Read this sentence, then press the microphone!' : '🎉 Excellent work, astronaut!'}
+      <p className="text-lg font-medium text-blue-600 mb-6">
+        {!hasRecorded ? '👆 Read this sentence aloud!' : '🎉 Mission Accomplished!'}
       </p>
 
       {!hasRecorded ? (
@@ -221,31 +211,23 @@ export function Level2ReadingRocket({ onComplete, onProgress }: Level2Props) {
             isRecording
               ? 'bg-red-500'
               : 'bg-gradient-to-r from-blue-500 to-indigo-500'
-          } text-white px-16 py-12 rounded-full shadow-2xl transition-all`}
+          } text-white px-10 py-6 rounded-full shadow-xl transition-all`}
         >
           {isRecording ? (
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-3">
               <motion.div
                 animate={{ scale: [1, 1.2, 1] }}
                 transition={{ duration: 0.5, repeat: Infinity }}
               >
-                <Square className="w-12 h-12 fill-white" />
+                <Square className="w-8 h-8 fill-white" />
               </motion.div>
-              <span className="text-3xl font-black">Recording...</span>
+              <span className="text-xl font-black uppercase tracking-wide">Stop</span>
             </div>
           ) : (
-            <div className="flex items-center gap-4">
-              <Mic className="w-12 h-12" />
-              <span className="text-3xl font-black">Start Reading</span>
+            <div className="flex items-center gap-3">
+              <Mic className="w-8 h-8" />
+              <span className="text-xl font-black uppercase tracking-wide">Start Reading</span>
             </div>
-          )}
-
-          {isRecording && (
-            <motion.div
-              className="absolute inset-0 border-4 border-white rounded-full"
-              animate={{ scale: [1, 1.2, 1], opacity: [0.7, 0, 0.7] }}
-              transition={{ duration: 1, repeat: Infinity }}
-            />
           )}
         </motion.button>
       ) : (
@@ -255,7 +237,7 @@ export function Level2ReadingRocket({ onComplete, onProgress }: Level2Props) {
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
           onClick={handleNext}
-          className="bg-gradient-to-r from-green-500 to-emerald-500 text-white text-3xl font-black px-16 py-12 rounded-full shadow-2xl"
+          className="bg-gradient-to-r from-green-500 to-emerald-500 text-white text-xl font-black px-10 py-6 rounded-full shadow-xl"
         >
           Complete Mission! 🎉
         </motion.button>
@@ -267,27 +249,27 @@ export function Level2ReadingRocket({ onComplete, onProgress }: Level2Props) {
     <div className="relative">
       <motion.div
         key={currentGame}
-        initial={{ opacity: 0, scale: 0.8 }}
+        initial={{ opacity: 0, scale: 0.9 }}
         animate={{ opacity: 1, scale: 1 }}
-        exit={{ opacity: 0, scale: 0.8 }}
+        exit={{ opacity: 0, scale: 0.9 }}
         transition={{ duration: 0.3 }}
       >
         {games[currentGame]}
       </motion.div>
 
-      {/* Space background stars */}
+      {/* Space background stars - Reduced count for performance and visual clarity at zoom */}
       <div className="fixed inset-0 pointer-events-none overflow-hidden" style={{ zIndex: -1 }}>
-        {[...Array(20)].map((_, i) => (
+        {[...Array(15)].map((_, i) => (
           <motion.div
             key={i}
-            className="absolute text-yellow-300"
+            className="absolute text-yellow-300 text-xs"
             style={{
               top: `${Math.random() * 100}%`,
               left: `${Math.random() * 100}%`,
             }}
             animate={{
-              opacity: [0.3, 1, 0.3],
-              scale: [1, 1.5, 1],
+              opacity: [0.3, 0.8, 0.3],
+              scale: [1, 1.2, 1],
             }}
             transition={{
               duration: 2 + Math.random() * 2,
