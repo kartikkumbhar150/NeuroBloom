@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { motion } from "framer-motion";
 import { Camera, Mic, ArrowRight, CheckCircle2, XCircle, AlertCircle, Settings2, Video, ShieldCheck } from 'lucide-react';
-
+import { useVideo } from "@/context/VideoContext";
 interface PermissionsScreenProps {
   onComplete: () => void;
   onBack?: () => void;
@@ -14,6 +14,22 @@ export function PermissionsScreen({ onComplete, onBack }: PermissionsScreenProps
   const [micPermission, setMicPermission] = useState<'pending' | 'granted' | 'denied'>('pending');
   const [requestingCamera, setRequestingCamera] = useState(false);
   const [requestingMic, setRequestingMic] = useState(false);
+  const { startRecording } = useVideo();
+
+  const handleProceed = async () => {
+  await startRecording();   // 🔥 IMPORTANT
+  onComplete();             // move to assessment
+};
+
+  const handleBeginAssessment = async () => {
+  try {
+    await startRecording();
+    onComplete();
+  } catch (e) {
+    alert("Camera recording failed. Please retry.");
+  }
+};
+
 
   const requestCameraPermission = async () => {
     setRequestingCamera(true);
@@ -160,7 +176,7 @@ export function PermissionsScreen({ onComplete, onBack }: PermissionsScreenProps
               <motion.button
                 whileHover={canProceed ? { scale: 1.01 } : {}}
                 whileTap={canProceed ? { scale: 0.99 } : {}}
-                onClick={onComplete}
+                onClick={handleProceed}
                 disabled={!canProceed}
                 className={`w-full py-4 rounded-xl font-bold text-sm transition-all flex items-center justify-center gap-3 shadow-xl ${
                   canProceed 

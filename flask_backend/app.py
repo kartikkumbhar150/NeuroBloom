@@ -14,7 +14,8 @@ from utils.groq_api import send_to_groq
 from pdf_generator import create_pdf
 from cloudinary_uploader import upload_to_cloudinary
 from utils.report_db import save_report_url
-
+from utils.video_download import download_video_from_url, cleanup_video
+from main import process_video_logic # Ye function aapke main script mein hona chahiye
 
 # ================= MODELS =================
 
@@ -414,6 +415,33 @@ def test5():
         "strengths": strengths,
         "weaknesses": weaknesses
     })
+
+
+# ---------------- Vidoe Processing ----------------
+@app.route("/predict/video", methods=["POST"])
+def predict_video():
+    session_id = request.json.get("session_id")
+    row = fetch_session(session_id)
+    
+    if not row or not row[-1]:
+        return jsonify({"error": "No link"}), 400
+
+    video_url = row[-1]
+    local_path = download_video_from_url(video_url)
+
+    if not local_path:
+        return jsonify({"error": "Robust download failed"}), 500
+
+    try:
+        report = process_video_logic(local_path)
+        return jsonify(report)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+    finally:
+        # Yeh hamesha chalega, chahe success ho ya error
+        cleanup_video(local_path)
+
+
 
 def run_dyscalculia_internal(session_id):
     with app.test_request_context(json={"session_id": session_id}):

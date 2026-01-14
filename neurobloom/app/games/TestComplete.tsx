@@ -3,6 +3,9 @@
 import { motion } from "framer-motion";
 import { Trophy, Star, Download, Home, Sparkles } from 'lucide-react';
 import { StudentData } from './StudentForm';
+import { useEffect } from "react";
+import { useVideo } from "@/context/VideoContext";
+
 
 interface TestCompleteProps {
   studentData: StudentData;
@@ -10,6 +13,18 @@ interface TestCompleteProps {
 }
 
 export function TestComplete({ studentData, onReturnHome }: TestCompleteProps) {
+  const { stopAndUpload } = useVideo();
+
+  useEffect(() => {
+  const stop = async () => {
+    await stopAndUpload();
+  };
+  stop();
+}, []);
+
+
+  
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-600 via-pink-500 to-orange-400 flex items-center justify-center overflow-hidden p-8">
       <div className="max-w-4xl w-full">

@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { motion } from "framer-motion";
 import { User, Calendar, Users, ArrowRight, ShieldCheck, CheckCircle2 } from 'lucide-react';
+import { useVideo } from "@/context/VideoContext";
 
 interface StudentFormProps {
   onNext: (data: StudentData) => void;
@@ -16,6 +17,7 @@ export interface StudentData {
 }
 
 export function StudentForm({ onNext, onBack }: StudentFormProps) {
+  const { setSessionId } = useVideo();
   const [formData, setFormData] = useState<StudentData>({
     name: '',
     age: 6,
@@ -44,6 +46,7 @@ export function StudentForm({ onNext, onBack }: StudentFormProps) {
 
     const { sessionId } = await res.json();
     localStorage.setItem("sessionId", sessionId);
+    setSessionId(sessionId);
     onNext(formData);
   };
 

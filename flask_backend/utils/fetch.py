@@ -17,7 +17,8 @@ def fetch_session(session_id):
             test4_q1, test4_q2, test4_q3, test4_q4,
             test4_q1_time, test4_q2_time, test4_q3_time, test4_q4_time,
             test6_q1_score, test6_q2_score, test6_q3_score, test6_q4_score,
-            test6_q1_time, test6_q2_time, test6_q3_time, test6_q4_time
+            test6_q1_time, test6_q2_time, test6_q3_time, test6_q4_time,
+            video_link
         FROM child_assessment_features
         WHERE id = %s
     """, (session_id,))
