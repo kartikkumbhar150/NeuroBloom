@@ -2,6 +2,8 @@
 
 import React from "react";
 import { motion } from "framer-motion";
+import Link from "next/link";
+
 import { 
   Play, 
   Activity,
@@ -33,11 +35,38 @@ export default function Dashboard({ onStartTest }: DashboardProps) {
         </div>
         
         <nav className="flex-1 px-4 space-y-1">
-          <NavItem icon={<LayoutDashboard size={18} />} label="Overview" active />
-          <NavItem icon={<FileText size={18} />} label="Assessments" />
-          <NavItem icon={<Users size={18} />} label="Patient List" />
-          <NavItem icon={<TrendingUp size={18} />} label="Analytics" />
-        </nav>
+
+  <Link href="/">
+    <NavItem
+      icon={<LayoutDashboard size={18} />}
+      label="Overview"
+      active
+    />
+  </Link>
+
+  <Link href="/assessments">
+    <NavItem
+      icon={<FileText size={18} />}
+      label="Assessments"
+    />
+  </Link>
+
+  <Link href="/patients">
+    <NavItem
+      icon={<Users size={18} />}
+      label="Patient List"
+    />
+  </Link>
+
+  <Link href="/analytics">
+    <NavItem
+      icon={<TrendingUp size={18} />}
+      label="Analytics"
+    />
+  </Link>
+
+</nav>
+
 
         <div className="p-4 border-t border-slate-100 space-y-1">
           <NavItem icon={<Settings size={18} />} label="Settings" />
