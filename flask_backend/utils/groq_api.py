@@ -16,45 +16,60 @@ def send_to_groq(report_json):
     """
     
     prompt = f"""
-    You are a Child Neuropsychologist AI specializing in developmental disorders.
+    You are a Senior Child Neuropsychologist and Developmental Specialist.
     
     TASK: Analyze the provided JSON data from 6 cognitive modules (Math, Reading, Emotion, Memory, Hearing, Handwriting) 
-    and perform a clinical screening.
+    to create a comprehensive Neuro-Developmental Profile.
 
-    STEP 1: For EACH disability listed below, determine the 'Risk Status' based on the data.
-    Categories: Dyslexia, Dysgraphia, Dyscalculia, Auditory Processing Disorder (APD), Non-Verbal Learning Disability (NVLD), ADHD, Autism Spectrum Disorder (ASD).
-    
-    Allowed Statuses: "Not Detected", "Low Risk", "Medium Risk", "High Risk".
+    STEP 1: RISK SCREENING
+    Evaluate: Dyslexia, Dysgraphia, Dyscalculia, Auditory Processing Disorder (APD), NVLD, ADHD, and ASD.
+    For each, provide:
+    - Status: Not Detected, Low, Medium, or High Risk.
+    - Clinical Finding: Specific data-driven reason for this status.
+    - The "Why": A brief explanation of the underlying neurological or cognitive mechanism (e.g., "Difficulty with phonological loop" or "Working memory deficit").
 
-    STEP 2: Identify Child's Strengths and Weaknesses.
-    STEP 3: Suggest a Detailed Action Plan (Therapies and Daily Activities).
+    STEP 2: DETAILED CHILD PROFILE
+    - Strengths: Highlight 3-4 areas where the child excels (based on high scores/fast response times).
+    - Weaknesses: Identify specific cognitive bottlenecks.
+    - Precautions for Parents: List "What to avoid" (e.g., avoiding multi-step verbal instructions if APD risk is high).
+
+    STEP 3: ACTION PLAN & INTERVENTIONS
+    - Activities to Overcome: Provide 3-5 gamified or daily activities. Each must include:
+        * Activity Name
+        * Goal (Which cognitive skill it targets)
+        * Instructions (Step-by-step for the child/parent)
+    - Recommended Professional Therapies: (e.g., ABA, CBT, OT, Speech Therapy) with a brief justification.
 
     DATA TO ANALYZE:
     {report_json}
 
-    STRICT JSON OUTPUT FORMAT:
+    STRICT JSON OUTPUT FORMAT (Ensure all keys exist):
     {{
       "screenings": [
-        {{ "disability": "Dyslexia", "status": "Low Risk", "finding": "Reason based on reading speed/accuracy" }},
-        {{ "disability": "Dysgraphia", "status": "Not Detected", "finding": "..." }},
-        {{ "disability": "Dyscalculia", "status": "...", "finding": "..." }},
-        {{ "disability": "Auditory Processing Disorder", "status": "...", "finding": "..." }},
-        {{ "disability": "Non-verbal learning disabilities", "status": "...", "finding": "..." }},
-        {{ "disability": "ADHD", "status": "...", "finding": "..." }},
-        {{ "disability": "Autism Spectrum Disorder", "status": "...", "finding": "..." }}
+        {{ 
+          "disability": "...", 
+          "status": "...", 
+          "finding": "...",
+          "biological_cause": "Briefly explain the 'why' behind this condition"
+        }}
       ],
-      "overall_assessment": {{
-        "strengths": ["list", "of", "strengths"],
-        "weaknesses": ["list", "of", "weaknesses"],
-        "detailed_activities": [
-           {{ "activity_name": "...", "goal": "...", "instructions": "..." }}
-        ],
-        "therapies_suggested": ["Occupational Therapy", "Speech Therapy", etc.]
+      "child_profile": {{
+        "strengths": [{{ "area": "...", "description": "..." }}],
+        "weaknesses": [{{ "area": "...", "description": "..." }}],
+        "parental_precautions": ["List of things parents should be mindful of or avoid"]
       }},
-      "risk_level_summary": "Overall Clinical Risk Level (Low/Medium/High)"
+      "intervention_plan": {{
+        "daily_activities": [
+           {{ "name": "...", "goal": "...", "instructions": "..." }}
+        ],
+        "therapeutic_recommendations": [
+           {{ "therapy": "...", "reason": "..." }}
+        ]
+      }},
+      "risk_level_summary": "Overall Clinical Risk Level"
     }}
     
-    Final Note: Return ONLY the JSON object. No prose or conversation.
+    Final Note: Return ONLY the JSON object. Use professional yet supportive language.
     """
 
     headers = {
