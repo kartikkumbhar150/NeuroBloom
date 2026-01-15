@@ -85,7 +85,14 @@ export function Level3WritingWizard({ onComplete, onProgress }: Level3Props) {
       <div className="bg-gradient-to-br from-purple-100 to-pink-100 p-6 rounded-3xl shadow-xl mb-6 border-2 border-purple-300">
         <div className="bg-white p-4 rounded-xl shadow-inner mb-4">
           <p className="text-xl text-gray-800 leading-tight font-medium italic">
-            "I jump like a frog and run like the wind, I laugh with my friends and always grin."
+            "I wake up early when the sun smiles at me.
+I brush my teeth and get ready for school.
+My school bag is full of books and dreams.
+I love learning letters, numbers, and new words.
+My teacher helps me and my friends every day.
+We play, draw, and sing happy songs together.
+At lunch, I share my food and laugh a lot.
+When I go home, I tell my parents all about my day."
           </p>
         </div>
         <p className="text-lg text-purple-700 font-bold">
